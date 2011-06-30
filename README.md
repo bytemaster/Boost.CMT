@@ -23,23 +23,23 @@ on ease of use and staying out of your way.
 ### Basic Example ###
 
 Example:
-   int hello(const std::string& world ) {
+    int hello(const std::string& world ) {
         return world.size(); 
-   }
+    }
 
-   void bench() {
+    void bench() {
         ptime start = microsec_clock::universal_time();
         int sum = 0;
         for( uint32_t i = 0; i < 1000; ++i ) 
             sum += async<int>( boost::bind(hello, "world"), "hello_func" ).wait();
         ptime end = microsec_clock::universal_time();
         slog( "%1% calls/sec", (1000.0/((stop-start).total_microseconds()/1000000.0)) );
-   }
+    }
 
-   int main( int argc, char** argv ) {
+    int main( int argc, char** argv ) {
         async( bench );
         boost::cmt::exec(); 
-   }
+    }
 
 ### Signal Example ###
 

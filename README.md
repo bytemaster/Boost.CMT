@@ -23,6 +23,7 @@ on ease of use and staying out of your way.
 ### Basic Example ###
 
 Example:
+
     int hello(const std::string& world ) {
         return world.size(); 
     }

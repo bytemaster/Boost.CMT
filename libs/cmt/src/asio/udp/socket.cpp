@@ -1,4 +1,4 @@
-#include "socket.hpp"
+#include <boost/cmt/asio/udp/socket.hpp>
 #include <boost/cmt/thread.hpp>
 #include <boost/bind.hpp>
 

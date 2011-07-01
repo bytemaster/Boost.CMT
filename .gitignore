@@ -1,0 +1,11 @@
+*.cmake
+CMakeCache.txt
+*.swp
+*.swo
+*.swn
+*.swm
+*.swl
+*.a
+*.dylib
+Makefile
+CMakeFiles

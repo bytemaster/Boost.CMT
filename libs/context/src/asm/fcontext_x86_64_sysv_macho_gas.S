@@ -47,8 +47,8 @@
 
 .text
 .globl _boost_fcontext_jump
-//.type _boost_fcontext_jump,@function 
-.balign  16 
+//.type _boost_fcontext_jump,@function
+.align 8
 _boost_fcontext_jump:
     movq     %rbx,       (%rdi)         /* save RBX */
     movq     %r12,       0x8(%rdi)      /* save R12 */
@@ -85,8 +85,8 @@ _boost_fcontext_jump:
 
 .text
 .globl _boost_fcontext_make
-/*.type _boost_fcontext_make,@function */
-.balign 8 
+//.type _boost_fcontext_make,@function
+.align 8
 _boost_fcontext_make:
     movq   %rdi,                 (%rdi)     /* save the address of current context */
     movq   %rsi,                 0x38(%rdi) /* save the address of the function supposed to run */
@@ -96,6 +96,8 @@ _boost_fcontext_make:
     movq   %rdx,                 0x30(%rdi) /* save the address */
     movq   0x60(%rdi),           %rcx       /* load the address of the next context */
     movq   %rcx,                 0x8(%rdi)  /* save the address of next context */
+    stmxcsr  0x48(%rdi)                     /* save SSE2 control and status word */
+    fnstcw   0x4c(%rdi)                     /* save x87 control word */
     leaq   link_fcontext(%rip),  %rcx       /* helper code executed after fn() returns */
     movq   %rcx,                 (%rdx)
     xorq   %rax,                 %rax       /* set RAX to zero */

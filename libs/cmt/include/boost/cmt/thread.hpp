@@ -2,11 +2,12 @@
 #define BOOST_CMT_HPP
 #include <vector>
 #include <boost/cmt/task.hpp>
+#include <boost/cmt/retainable.hpp>
 
 namespace boost { namespace cmt {
-   class abstract_thread : public boost::enable_shared_from_this<abstract_thread> {
+   class abstract_thread : public retainable {
         public:
-            typedef boost::shared_ptr<abstract_thread> ptr;
+            typedef retainable_ptr<abstract_thread> ptr;
 
             virtual ~abstract_thread(){};
         protected:
@@ -24,18 +25,27 @@ namespace boost { namespace cmt {
             static thread* create();
 
             template<typename T>
-            future<T> async( const boost::function<T()>& t, uint64_t timeout, const char* n= "" ) {
+            future<T> async( const boost::function<T()>& t, const char* n= "" ) {
                typename promise<T>::ptr p(new promise<T>());
                task::ptr tsk( new rtask<T>(t,p,n) );
                async(tsk);
                return p;
             }
             template<typename T>
-            future<T> async( const boost::function<T()>& t, const char* n= "" ) {
-               typename promise<T>::ptr p(new promise<T>());
-               task::ptr tsk( new rtask<T>(t,p,n) );
-               async(tsk);
-               return p;
+            T sync( const boost::function<T()>& t, uint64_t timeout_us, const char* n= "" ) {
+               stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
+               typename promise<T>::ptr p((promise<T>*)&prom);
+               stack_retainable<rtask<T> > tsk(t,p,n); tsk.retain();
+               async(&tsk);
+               return p->wait(timeout_us);
+            }
+            template<typename T>
+            T sync( const boost::function<T()>& t, const char* n= "" ) {
+               stack_retainable<promise<T> > prom; prom.retain();
+               typename promise<T>::ptr p((promise<T>*)&prom,true);
+               stack_retainable<reftask<T> > tsk(t,p,n); tsk.retain();
+               async(&tsk);
+               return p->wait();
             }
 
             void yield();
@@ -57,16 +67,21 @@ namespace boost { namespace cmt {
    };
 
    template<typename T>
-   future<T> async( const boost::function<T()>& t, uint64_t timeout = -1, const char* n = "") {
+   future<T> async( const boost::function<T()>& t, uint64_t timeout, const char* n = "") {
         return cmt::thread::current().async<T>(t,timeout,n);
    }
    template<typename T>
    future<T> async( const boost::function<T()>& t, const char* n = "") {
         return cmt::thread::current().async<T>(t,n);
    }
+   template<typename T>
+   T sync( const boost::function<T()>& t, const char* n = "") {
+        return cmt::thread::current().sync<T>(t,n);
+   }
    void async( const boost::function<void()>& t ); 
    int  exec();
 
+   void yield();
 } } // boost::cmt
 
 #endif

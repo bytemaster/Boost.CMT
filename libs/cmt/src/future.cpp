@@ -7,11 +7,11 @@ namespace boost { namespace cmt {
         m_blocked_thread =&thread::current();
     }
     void promise_base::wait( uint64_t timeout_us ) {
-        thread::current().wait( shared_from_this(), timeout_us ); 
+        thread::current().wait( ptr(this,true), timeout_us ); 
     }
 
     void promise_base::notify() {
-        if( m_blocked_thread ) m_blocked_thread->notify(shared_from_this());
+        if( m_blocked_thread ) m_blocked_thread->notify(ptr(this,true));
     }
 
 } } // namespace boost::cmt

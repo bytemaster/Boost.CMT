@@ -18,13 +18,13 @@ boost::signal<void(std::string)> test_signal;
 
 int goodbye(const std::string& world ) {
 //    slog( "goodbye %1%", world );
-    return world.size();
+    return 5;//world.size();
 }
 void bench();
 
-void delay()
+void_t delay()
 {
-    slog( "delay 3 sec");
+    slog( "delay 3 sec, %1%", 3.13);
     boost::cmt::thread::current().usleep(2000000);
     slog( "test_signal");
     test_signal("hello world!");
@@ -40,13 +40,13 @@ int hello(const std::string& world ) {
     if( n )
         n->resume();
         */
-    boost::cmt::thread::current().usleep(1000000);
+    //boost::cmt::thread::current().usleep(1000000);
     
-    slog( "waiting for test_signal" );
-    std::string rtn = boost::cmt::wait<std::string>(test_signal, 3000000);
-    slog( "got test_signal %1%", rtn );
+    ////slog( "waiting for test_signal" );
+    //std::string rtn = boost::cmt::wait<std::string>(test_signal, 3000000);
+    //slog( "got test_signal %1%", rtn );
 
-    std::cerr<<world<< " " << async<int>(boost::bind(goodbye, "goodbye"), "goodbye_func" ).wait() <<std::endl;
+    //std::cerr<<world<< " " << async<int>(boost::bind(goodbye, "goodbye"), "goodbye_func" ).wait() <<std::endl;
     return world.size();
 }
 
@@ -65,18 +65,42 @@ void main2() {
 }
 
 void bench() {
-    async(delay);
+    async<void_t>(delay).wait();
+    uint64_t cnt = 2000000;
+
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    for( uint32_t i = 0; i < 10; ++i ) {
-        //async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000);
+    for( uint32_t i = 0; i < cnt; ++i ) {
         try {
-            async<int>( boost::bind(hello, "world"), "hello_func" ).wait(2000000);
+            async<int>( boost::bind(hello, std::string()), "hello_func" ).wait(1000000);
+           // async<int>( boost::bind(hello, "world"), "hello_func" ).wait();//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
         }
     }
     boost::posix_time::ptime stop = boost::posix_time::microsec_clock::universal_time();
-    slog( "%1% calls/sec", (10.0/((stop-start).total_microseconds()/1000000.0)) );
+    slog( "%1% calls/sec", ((cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
+    start = boost::posix_time::microsec_clock::universal_time();
+    for( uint32_t i = 0; i < cnt; ++i ) {
+        try {
+           // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
+            async<int>( boost::bind(hello, "world"), "hello_func" ).wait();//2000000);
+        } catch( const boost::exception& e ) {
+                elog( "%1%", boost::diagnostic_information(e) );
+        }
+    }
+    stop = boost::posix_time::microsec_clock::universal_time();
+    slog( "%1% calls/sec", ((cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
+    start = boost::posix_time::microsec_clock::universal_time();
+    for( uint32_t i = 0; i < cnt; ++i ) {
+        try {
+           // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
+            sync<int>( boost::bind(hello, "world"), "hello_func" );//2000000);
+        } catch( const boost::exception& e ) {
+                elog( "%1%", boost::diagnostic_information(e) );
+        }
+    }
+    stop = boost::posix_time::microsec_clock::universal_time();
+    slog( "%1% calls/sec", ((cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
 }
 
 int main( int argc, char** argv )

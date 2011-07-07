@@ -111,6 +111,10 @@ boost_fcontext_make PROC EXPORT
 
     mov  rax,       [rcx+078h]      ; load the address of the next context
     mov  [rcx+08h], rax             ; save the address of next context
+
+    mov     rax,         [rcx+060h]
+    fxsave  [rax]                   ; save fp
+
     lea  rax,       boost_fcontext_link   ; helper code executed after fn() returns
     mov  [rdx],     rax             ; set the return address to the helper function
 

@@ -13,16 +13,17 @@ SET( CMAKE_DEBUG_POSTFIX _debug )
 SET( BUILD_SHARED_LIBS NO )
 
 SET(Boost_USE_STATIC_LIBS ON)
-FIND_PACKAGE( Boost COMPONENTS thread date_time system filesystem program_options signals) 
+FIND_PACKAGE( Boost COMPONENTS thread date_time system filesystem program_options signals serialization) 
 
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} )
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 LINK_DIRECTORIES( ${Boost_LIBRARY_DIRS} )
 
 INCLUDE( SetupTargetMacros )
-ADD_DEFINITIONS( -DBOOST_CONTEXT_UCTX )
-ADD_DEFINITIONS( -D_XOPEN_SOURCE )
+#ADD_DEFINITIONS( -DBOOST_CONTEXT_UCTX )
+#ADD_DEFINITIONS( -D_XOPEN_SOURCE )
 
 
 ADD_SUBDIRECTORY( libs/cmt )
+ADD_SUBDIRECTORY( libs/rpc )
 ADD_SUBDIRECTORY( libs/context )

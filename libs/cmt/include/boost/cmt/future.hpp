@@ -1,17 +1,18 @@
 #ifndef _BOOST_CMT_FUTURE_HPP
 #define _BOOST_CMT_FUTURE_HPP
-#include <boost/enable_shared_from_this.hpp>
+#include <boost/cmt/retainable.hpp>
 #include <boost/cmt/error.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/cmt/mutex.hpp>
 #include <boost/optional.hpp>
 
 namespace boost { namespace cmt {
 
     class abstract_thread;
-    class promise_base :  public boost::enable_shared_from_this<promise_base> {
+    class promise_base :  public retainable {
          public:
-             typedef boost::shared_ptr<promise_base> ptr;
-             promise_base():m_blocked_thread(0){}
+             typedef retainable_ptr<promise_base> ptr;
+             promise_base():m_blocked_thread(0),m_timeout(-1){}
              virtual ~promise_base(){}
 
              virtual bool ready()const = 0;
@@ -25,7 +26,8 @@ namespace boost { namespace cmt {
          private:
              friend class thread;
              friend class thread_private;
-             abstract_thread* m_blocked_thread;
+             uint64_t                  m_timeout;
+             abstract_thread*          m_blocked_thread;
     };
 
     struct void_t {};
@@ -33,20 +35,20 @@ namespace boost { namespace cmt {
     template<typename T = void_t>
     class promise : public promise_base {
         public:
-            typedef boost::shared_ptr<promise> ptr;
+            typedef retainable_ptr<promise> ptr;
 
             promise(){}
             promise( const T& v ):m_value(v){}
 
             bool ready()const { 
-                boost::unique_lock<boost::mutex> lock( m_mutex );
+                boost::unique_lock<mutex> lock( m_mutex );
                 return m_value || m_error; 
             }
             operator const T&()const  { return wait();  }
 
             const T& wait(uint64_t timeout = -1) {
                 { // lock while we check values
-                    boost::unique_lock<boost::mutex> lock( m_mutex );
+                    boost::unique_lock<mutex> lock( m_mutex );
                     if( m_error ) boost::rethrow_exception(m_error);
                     if( m_value ) return *m_value;
                     enqueue_thread();
@@ -59,14 +61,14 @@ namespace boost { namespace cmt {
             }
             void set_exception( const boost::exception_ptr& e ) {
                 {
-                    boost::unique_lock<boost::mutex> lock( m_mutex );
+                    boost::unique_lock<mutex> lock( m_mutex );
                     m_error = e;
                 }
                 notify();
             }
             void set_value( const T& v ) {
                 {
-                    boost::unique_lock<boost::mutex> lock( m_mutex );
+                    boost::unique_lock<mutex> lock( m_mutex );
                     if( m_error ) 
                         return;
                     m_value = v;
@@ -77,7 +79,7 @@ namespace boost { namespace cmt {
         private:
             void set_timeout() {
                 {
-                    boost::unique_lock<boost::mutex> lock( m_mutex );
+                    boost::unique_lock<mutex> lock( m_mutex );
                     if( m_value ) 
                         return;
                     m_error = boost::copy_exception( error::future_wait_timeout() );
@@ -85,7 +87,8 @@ namespace boost { namespace cmt {
                 notify();
             }
 
-            mutable boost::mutex    m_mutex;
+            mutable mutex           m_mutex;
+  //          mutable boost::mutex    m_mutex;
             boost::exception_ptr    m_error;
             boost::optional<T>      m_value;
     };
@@ -100,9 +103,16 @@ namespace boost { namespace cmt {
             future( const typename promise<T>::ptr& p = typename promise<T>::ptr() )
             :m_prom(p){}
 
+            bool     valid()const                { return !!m_prom;              }
             bool     ready()const                { return m_prom->ready();       }
-            operator const T&()const             { return m_prom->wait();        }
-            const T& wait(uint64_t timeout = -1) { return m_prom->wait(timeout); }
+            operator const T&()const { 
+                if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
+                return m_prom->wait();
+            }
+            const T& wait(uint64_t timeout = -1) { 
+                if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
+                return m_prom->wait(timeout); 
+            }
 
         private:
             typename promise<T>::ptr m_prom;

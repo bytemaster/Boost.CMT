@@ -146,9 +146,10 @@ namespace boost { namespace cmt {
     void start_thread( const promise<thread*>::ptr p  )
     {
         p->set_value( &thread::current() );
+        exec();
     }
 
-    thread* create() {
+    thread* thread::create() {
         promise<thread*>::ptr p(new promise<thread*>());
         new boost::thread( boost::bind(start_thread,p) );
         return p->wait();

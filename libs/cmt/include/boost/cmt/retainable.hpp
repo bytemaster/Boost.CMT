@@ -49,9 +49,7 @@ class retainable {
         }
 
     protected:
-        virtual ~retainable() {
-            BOOST_ASSERT( m_ref_count == 0 );
-        }
+        virtual ~retainable() {}
 
     private:
         retainable(const retainable&):m_ref_count(1) {}

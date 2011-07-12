@@ -92,6 +92,7 @@ public:
   /// Construct a basic_socket_streambuf without establishing a connection.
   basic_socket_streambuf()
     : basic_socket<Protocol, StreamSocketService>(
+    // TODO: default_io_service!
         boost::base_from_member<boost::asio::io_service>::member),
       unbuffered_(false)
   {
@@ -118,6 +119,7 @@ public:
     init_buffers();
     boost::system::error_code ec;
     this->basic_socket<Protocol, StreamSocketService>::close(ec);
+    //TODO: MAKE ASYNC
     this->basic_socket<Protocol, StreamSocketService>::connect(endpoint, ec);
     return !ec ? this : 0;
   }

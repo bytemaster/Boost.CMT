@@ -47,11 +47,24 @@ namespace boost { namespace cmt { namespace asio {
         boost::asio::async_read( s, buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
     }
+    template<typename AsyncReadStream, typename MutableBufferSequence>
+    size_t read_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+        promise<size_t>::ptr p(new promise<size_t>());
+        s.async_read_some( buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
+        return p->wait(timeout_us);
+    }
 
     template<typename AsyncReadStream, typename MutableBufferSequence>
     size_t write( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
         promise<size_t>::ptr p(new promise<size_t>());
         boost::asio::async_write( s, buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
+        return p->wait(timeout_us);
+    }
+
+    template<typename AsyncReadStream, typename MutableBufferSequence>
+    size_t write_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+        promise<size_t>::ptr p(new promise<size_t>());
+        s.async_write_some(  buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
     }
 

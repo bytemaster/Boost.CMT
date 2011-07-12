@@ -66,12 +66,13 @@ void main2() {
 
 void bench() {
     async<void_t>(delay).wait();
-    uint64_t cnt = 2000000;
+    uint64_t cnt = 20000000;
 
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    std::string hellostr("hello");
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
-            async<int>( boost::bind(hello, std::string()), "hello_func" ).wait(1000000);
+            async<int>( boost::bind(hello, boost::ref(hellostr)), "hello_func" ).wait(1000000);
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait();//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
@@ -83,7 +84,7 @@ void bench() {
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
-            async<int>( boost::bind(hello, "world"), "hello_func" ).wait();//2000000);
+            async<int>( boost::bind(hello, boost::ref(hellostr)), "hello_func" ).wait();//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
         }
@@ -94,7 +95,7 @@ void bench() {
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
-            sync<int>( boost::bind(hello, "world"), "hello_func" );//2000000);
+            sync<int>( boost::bind(hello, boost::ref(hellostr)), "hello_func" );//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
         }

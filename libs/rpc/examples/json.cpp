@@ -1,4 +1,5 @@
 #include <boost/rpc/json.hpp>
+#include <boost/rpc/message.hpp>
 
 struct test {
     int a;
@@ -28,6 +29,10 @@ int main( int argc, char** argv ) {
     test t2;
     boost::rpc::json::from_json( jtest, t2 );
     std::cerr<<boost::rpc::json::to_jsonf(t2)<<std::endl;
+
+    std::cerr<<boost::rpc::json::to_jsonf(boost::rpc::message())<<std::endl;
+    std::cerr<<boost::rpc::json::to_jsonf(t.data)<<std::endl;
+
 
     return 0;
 }

@@ -13,7 +13,8 @@ namespace boost{ namespace cmt {
      *
      *  This mutex does not block the current thread, but instead attempts to use
      *  an atomic operation to aquire the lock.  If unsuccessful, then it yields to
-     *  other tasks before trying again.
+     *  other tasks before trying again. If there is no current fiber, then yield is
+     *  a no-op and mutex becomes a spin-lock.  
      */
     class mutex {
         public:

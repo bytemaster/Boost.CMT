@@ -4,6 +4,7 @@
 #include <boost/rpc/datastream.hpp>
 #include <boost/rpc/varint.hpp>
 #include <boost/rpc/required.hpp>
+#include <boost/rpc/errors.hpp>
 #include <boost/rpc/log/log.hpp>
 #include <boost/rpc/base64.hpp>
 #include <sstream>
@@ -44,6 +45,10 @@ namespace boost { namespace rpc { namespace json {
     void pack( js::Value& jsv, const std::string& v );
     void pack( js::Value& jsv, const char* v );
     void pack( js::Value& jsv, const std::vector<char>& value );
+    template<typename T>
+    void pack( js::Value& jsv, const boost::optional<T>& v );
+    template<typename T>
+    void pack( js::Value& jsv, const required<T>& v );
     template<typename T, typename Alloc, template<typename,typename> class Container>
     void pack( js::Value& jsv, const Container<T,Alloc>& value );
     template<typename Key, typename Value>
@@ -74,6 +79,10 @@ namespace boost { namespace rpc { namespace json {
     void unpack( const js::Value& jsv, unsigned_int& v );
     void unpack( const js::Value& jsv, std::string& v );
     void unpack( const js::Value& jsv, std::vector<char>& value );
+    template<typename T>
+    void unpack( const js::Value& jsv, boost::optional<T>& v );
+    template<typename T>
+    void unpack( const js::Value& jsv, required<T>& v );
     template<typename T, typename Alloc, template<typename,typename> class Container>
     void unpack( const js::Value& jsv, Container<T,Alloc>& value );
     template<typename Key, typename Value>
@@ -98,7 +107,7 @@ namespace boost { namespace rpc { namespace json {
             void accept_member( const Class& c, boost::optional<T> (Class::*p), const char* name, Flags key ) {
                  if( !!(c.*p) ) {
                      obj.push_back( js::Pair(name,js::Value()) );
-                     boost::rpc::json::pack( obj.back(), c.*p );
+                     boost::rpc::json::pack( obj.back().value_, c.*p );
                  }
             }
 
@@ -223,18 +232,16 @@ namespace boost { namespace rpc { namespace json {
 
     template<typename T>
     void pack( js::Value& jsv, const boost::optional<T>& v ) {
-        if( !v )
-            jsv = js::Value();
-        else    
-            boost::rpc::json::pack( jsv, *v );
+        boost::rpc::json::pack( jsv, *v );
     }
 
     template<typename T>
-    void pack( js::Value& jsv, const boost::rpc::required<T>& v ) {
+    void pack( js::Value& jsv, const required<T>& v ) {
+        if( !v ) BOOST_THROW_EXCEPTION( boost::rpc::required_field_not_set() );
         boost::rpc::json::pack( jsv, *v );
     }
     template<typename T>
-    void unpack( const js::Value& jsv, boost::rpc::required<T>& v ) {
+    void unpack( const js::Value& jsv, required<T>& v ) {
         v = T();
         boost::rpc::json::unpack( jsv, *v );
     }

@@ -333,13 +333,13 @@ namespace boost { namespace cmt {
      *   tasks have yielded at least once.
      */
     void thread::yield() {
-        BOOST_ASSERT( my->current );
-
-        context_t*  prev = my->current;
-        my->ready_push_back(my->current);
-        my->current = 0;
-        my->ready_tail->suspend();
-        my->current = prev;
+        if( my->current ) {
+            context_t*  prev = my->current;
+            my->ready_push_back(my->current);
+            my->current = 0;
+            my->ready_tail->suspend();
+            my->current = prev;
+        }
     }
 
     void thread::quit() {

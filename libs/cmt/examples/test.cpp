@@ -29,10 +29,17 @@ void_t delay()
     slog( "test_signal");
     test_signal("hello world!");
 }
+int hello2(int cnt) {
+    slog( "%1%", cnt );    
+    return cnt;
+}
 
 int hello(int cnt) {
     slog( "%1%", cnt );    
-    return cnt;
+    boost::cmt::async<int>( boost::bind(hello2,cnt+10) );
+    boost::cmt::async<int>( boost::bind(hello2,cnt+1000) );
+    boost::cmt::async<int>( boost::bind(hello2,cnt+10000) ).wait();
+    return boost::cmt::sync<int>( boost::bind(hello2,cnt+100) );
 }
 
 void main2() {
@@ -102,7 +109,7 @@ void bench() {
         try {
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
            for( uint32_t f = 0; f < group_size; ++f ) {
-            futures[f] = async<int>( boost::bind(hello, i*group_size+f), "hello_func" );//2000000);
+            futures[f] = async<int>( boost::bind(hello, i*group_size+f), "hello_func", boost::cmt::priority(f) );//2000000);
            }
            for( uint32_t f = 0; f < group_size; ++f ) {
             futures[f].wait();

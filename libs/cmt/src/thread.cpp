@@ -19,6 +19,7 @@ namespace boost { namespace cmt {
         context_t( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
         :bc::context<>( boost::move(f), boost::move(s),a,b),next_blocked(0),next(0),prom(0){}
 
+        priority                 prio;
         promise_base*            prom; 
         uint64_t                 resume_time;
         context_t*               next_blocked;
@@ -83,7 +84,7 @@ namespace boost { namespace cmt {
            }
            struct task_priority_less {
                bool operator()( const task::ptr& a, const task::ptr& b ) {
-                   return a->priority < b->priority;
+                   return a->prio.value < b->prio.value;
                }
            };
            void enqueue( const task::ptr& t ) {
@@ -154,8 +155,8 @@ namespace boost { namespace cmt {
 
 
     int  exec() { cmt::thread::current().exec(); return 0; }
-    void async( const boost::function<void()>& t ) {
-       thread::current().async(t);
+    void async( const boost::function<void()>& t, priority prio ) {
+       thread::current().async(t,prio);
     }
 
     thread::thread() {
@@ -303,6 +304,8 @@ namespace boost { namespace cmt {
                 }
             }
             BOOST_ASSERT(next);
+            if( my->current ) 
+                my->current->prio = next->prio;
             next->run();
             next->release();
         }
@@ -379,8 +382,8 @@ namespace boost { namespace cmt {
     }
 
 
-    void thread::async( const boost::function<void()>& t ) {
-       async(task::ptr( new vtask(t) ) );
+    void thread::async( const boost::function<void()>& t, priority prio ) {
+       async(task::ptr( new vtask(t,(std::max)(current_priority(),prio)) ) );
     }
     void thread::async( const task::ptr& t ) {
         //slog( "async..." );
@@ -396,6 +399,12 @@ namespace boost { namespace cmt {
         //slog( "return.." );
     }
     void yield() { thread::current().yield(); }
+
+    priority current_priority() { return cmt::thread::current().current_priority(); }
+    priority thread::current_priority()const {
+        if( my->current ) return my->current->prio;
+        return priority();
+    }
 
 } } // namespace boost::cmt 
 

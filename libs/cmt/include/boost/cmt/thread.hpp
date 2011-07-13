@@ -15,37 +15,38 @@ namespace boost { namespace cmt {
             virtual void wait( const promise_base::ptr& p, uint64_t timeout_us ) = 0;
             virtual void notify( const promise_base::ptr& p ) = 0;
    };
+   priority current_priority();
 
    class thread : public abstract_thread {
         public:
             static thread& current();
 
-            void async( const boost::function<void()>& t );
+            void async( const boost::function<void()>& t, priority p = priority() );
 
             static thread* create();
 
             template<typename T>
-            future<T> async( const boost::function<T()>& t, const char* n= "" ) {
+            future<T> async( const boost::function<T()>& t, priority prio = priority(), const char* n= "" ) {
                typename promise<T>::ptr p(new promise<T>());
-               task::ptr tsk( new rtask<T>(t,p,n) );
+               task::ptr tsk( new rtask<T>(t,p,std::max(current_priority(),prio),n) );
                async(tsk);
                return p;
             }
             template<typename T>
-            T sync( const boost::function<T()>& t, uint64_t timeout_us, const char* n= "" ) {
+            T sync( const boost::function<T()>& t, priority prio, uint64_t timeout_us=-1, const char* n= "" ) {
                stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
                typename promise<T>::ptr p((promise<T>*)&prom);
-               stack_retainable<rtask<T> > tsk(t,p,n); tsk.retain();
+               stack_retainable<rtask<T> > tsk(t,p,(std::max)(current_priority(),prio),n); tsk.retain();
                async(&tsk);
                return p->wait(timeout_us);
             }
             template<typename T>
-            T sync( const boost::function<T()>& t, const char* n= "" ) {
-               stack_retainable<promise<T> > prom; prom.retain();
-               typename promise<T>::ptr p((promise<T>*)&prom,true);
-               stack_retainable<reftask<T> > tsk(t,p,n); tsk.retain();
+            T sync( const boost::function<T()>& t, uint64_t timeout_us=-1, const char* n= "" ) {
+               stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
+               typename promise<T>::ptr p((promise<T>*)&prom);
+               stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain();
                async(&tsk);
-               return p->wait();
+               return p->wait(timeout_us);
             }
 
             void yield();
@@ -54,6 +55,7 @@ namespace boost { namespace cmt {
             void quit( );
             void exec();
 
+            priority current_priority()const;
         protected:
             void wait( const promise_base::ptr& p, uint64_t timeout_us );
             void notify( const promise_base::ptr& p );
@@ -69,18 +71,26 @@ namespace boost { namespace cmt {
    };
 
    template<typename T>
-   future<T> async( const boost::function<T()>& t, uint64_t timeout, const char* n = "") {
-        return cmt::thread::current().async<T>(t,timeout,n);
+   future<T> async( const boost::function<T()>& t, const char* n, priority prio=priority()) {
+        return cmt::thread::current().async<T>(t,(std::max)(current_priority(),prio),n);
    }
    template<typename T>
-   future<T> async( const boost::function<T()>& t, const char* n = "") {
-        return cmt::thread::current().async<T>(t,n);
+   future<T> async( const boost::function<T()>& t, priority prio=priority(), const char* n = "") {
+        return cmt::thread::current().async<T>(t,(std::max)(current_priority(),prio),n);
    }
    template<typename T>
-   T sync( const boost::function<T()>& t, const char* n = "") {
-        return cmt::thread::current().sync<T>(t,n);
+   T sync( const boost::function<T()>& t, const char* n, priority prio = current_priority(), uint64_t timeout_us = -1) {
+        return cmt::thread::current().sync<T>(t,prio,timeout_us,n);
    }
-   void async( const boost::function<void()>& t ); 
+   template<typename T>
+   T sync( const boost::function<T()>& t, priority prio, uint64_t timeout_us = -1, const char* n = "") {
+        return cmt::thread::current().sync<T>(t,(std::max)(current_priority(),prio),timeout_us,n);
+   }
+   template<typename T>
+   T sync( const boost::function<T()>& t, uint64_t timeout_us = -1, const char* n = "") {
+        return cmt::thread::current().sync<T>(t,current_priority(),timeout_us,n);
+   }
+   void async( const boost::function<void()>& t, priority prio=priority() ); 
    int  exec();
 
    void yield();

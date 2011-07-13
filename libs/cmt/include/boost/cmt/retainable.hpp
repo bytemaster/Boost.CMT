@@ -17,6 +17,9 @@ class stack_retainable : public T {
         template<typename A, typename B, typename C>
         stack_retainable( const A& a, const B& b, const C& c)
         :T(a,b,c){}
+        template<typename A, typename B, typename C, typename D>
+        stack_retainable( const A& a, const B& b, const C& c, const D& d)
+        :T(a,b,c,d){}
 
         stack_retainable(){}
         ~stack_retainable() {}

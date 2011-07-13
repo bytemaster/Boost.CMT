@@ -57,6 +57,8 @@ namespace boost { namespace cmt {
         protected:
             void wait( const promise_base::ptr& p, uint64_t timeout_us );
             void notify( const promise_base::ptr& p );
+            void exec_until( const promise_base::ptr& p );
+
         private:
             thread();
             ~thread();

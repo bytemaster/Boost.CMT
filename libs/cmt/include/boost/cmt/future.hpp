@@ -42,7 +42,7 @@ namespace boost { namespace cmt {
 
             bool ready()const { 
                 boost::unique_lock<mutex> lock( m_mutex );
-                return m_value || m_error; 
+                return !!m_value || m_error; 
             }
             operator const T&()const  { return wait();  }
 
@@ -120,6 +120,9 @@ namespace boost { namespace cmt {
 
     template<>
     class future<void> : public future<void_t> {
+        public:
+            future( const typename promise<void_t>::ptr& p = typename promise<void_t>::ptr() )
+            :future<void_t>(p){}
     };
 
 

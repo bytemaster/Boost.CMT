@@ -17,7 +17,7 @@ namespace boost { namespace cmt {
         typedef context_t* ptr;
         template<typename Func>
         context_t( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
-        :bc::context<>( boost::move(f), boost::move(s),a,b),next_blocked(0){}
+        :bc::context<>( boost::move(f), boost::move(s),a,b),next_blocked(0),next(0),prom(0){}
 
         promise_base*            prom; 
         uint64_t                 resume_time;
@@ -89,7 +89,7 @@ namespace boost { namespace cmt {
            void enqueue( const task::ptr& t ) {
                 task::ptr cur = t;
                 while( cur ) {
-                    task_pqueue.push_back(t);
+                    task_pqueue.push_back(cur);
                     std::push_heap( task_pqueue.begin(),
                                     task_pqueue.end(), task_priority_less()   );
                     cur = cur->next;
@@ -101,7 +101,6 @@ namespace boost { namespace cmt {
                 if( pending ) {
                     enqueue( pending );
                 }
-
                 task::ptr p(0);
                 if( task_pqueue.size() ) {
                     p = task_pqueue.front();
@@ -122,12 +121,10 @@ namespace boost { namespace cmt {
         }
 
         while( sleep_pqueue.size() && now >= sleep_pqueue.front()->resume_time ) {
-            slog( "sleep pq size: %1%", sleep_pqueue.size() );
             context_t::ptr c = sleep_pqueue.front();
             ready_push_back( c );
             std::pop_heap(sleep_pqueue.begin(), sleep_pqueue.end(), sleep_priority_less() );
             sleep_pqueue.pop_back();
-            slog( "sleep pq size: %1%", sleep_pqueue.size() );
 
             if( c->prom ) {
                 c->prom->set_exception( boost::copy_exception( error::future_wait_timeout() ) );
@@ -170,8 +167,12 @@ namespace boost { namespace cmt {
     }
 
     void thread::usleep( uint64_t timeout_us ) {
-        BOOST_ASSERT( my->current );
+        //slog( "usleep %1%", timeout_us );
         BOOST_ASSERT( &current() == this );
+        if(!my->current ){
+            async<void>( boost::bind( &thread::usleep, this, timeout_us) ).wait();
+            return;
+        }
         my->current->resume_time = sys_clock() + timeout_us;
         my->current->prom = 0;
 
@@ -188,11 +189,25 @@ namespace boost { namespace cmt {
     }
 
     void thread::wait( const promise_base::ptr& p, uint64_t timeout_us ) {
+  //      slog( "wait! %1%", p.get() );
         BOOST_ASSERT( &current() == this );
-        BOOST_ASSERT(my->current);
+        BOOST_ASSERT( !p->ready() );
+
+        if( !my->current ) {
+            if( !my->ready_head ) {
+               // wlog( "creating new context" );
+                context_t* new_context = new context_t( boost::bind(&thread::exec_until,this,p), 
+                                                 bc::protected_stack( bc::stack_helper::default_stacksize() ), true, true );
+                my->ready_push_back(new_context);
+            }
+            exec_until(p);
+            return;
+        }
 
         if( timeout_us != -1 ) {
             my->current->resume_time = sys_clock() + timeout_us;
+            my->current->prom = p.get();
+            my->sleep_pqueue.push_back(my->current);
             std::push_heap( my->sleep_pqueue.begin(),
                             my->sleep_pqueue.end(), sleep_priority_less()   );
         }
@@ -205,13 +220,16 @@ namespace boost { namespace cmt {
         my->blocked = tmp;
 
         tmp->suspend();
+        tmp->prom = 0;
     }
 
     void thread::notify( const promise_base::ptr& p ) {
+        BOOST_ASSERT(p->ready());
         if( &current() != this )  {
             async( boost::bind( &thread::notify, this, p ) );
             return;
         }
+        //slog( "notify! %1%  ready %2%", p.get(), p->ready() );
         context_t* cur_blocked  = my->blocked;
         context_t* prev_blocked = 0;
         while( cur_blocked ) {
@@ -222,7 +240,7 @@ namespace boost { namespace cmt {
                     my->blocked = cur_blocked->next_blocked; 
                 }
                 cur_blocked->next_blocked = 0;
-                cur_blocked->prom         = 0;
+                //cur_blocked->prom         = 0;
                 my->ready_push_front( cur_blocked );
 
 
@@ -242,58 +260,29 @@ namespace boost { namespace cmt {
                 break;
             }
         }
-
-        /*
-        blocked_map::iterator itr = my->blocked.find( p );
-        if( itr != my->blocked.end() ) {
-            for( uint32_t i = 0; i < itr->second.size(); ++i ) {
-                // TODO: priority sort as we push
-                my->ready.push_front( itr->second[i] );
-                boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
-                my->task_ready.notify_all();
-            }
-            my->blocked.erase(itr);
-            my->timeout_to_prom.erase(my->prom_to_timeout[p]);
-            my->prom_to_timeout.erase(p);
-        }
-        */
     }
 
-
-    /**
-     *  If no current context, create a new context running exec()
-     *  If a current context exists, process tasks until the queue is
-     *  empty and then block.
-     */
-    void thread::exec() {
-        if( !my->current ) {
-            while( true ) {
-                // run ready tasks
-                while( my->ready_head ) {
-                    context_t* next = my->ready_pop_front();
-                    next->resume();
-                    my->current = 0;
-                    my->check_for_timeouts();
-                }
-                wlog( "creating new context" );
-                // create a new coro if there are no ready tasks
-                context_t* new_context = new context_t( boost::bind(&thread::exec,this), 
-                                                 bc::protected_stack( bc::stack_helper::default_stacksize() ), true, true );
-                my->current = new_context;
-                my->current->resume(); 
-            }
-        }
-        while( true ) {
- 
+    void thread::exec_until( const promise_base::ptr& p ) {
+        //slog( " %1%", p.get() );
+        while( !p->ready() ) {
+            //slog( "!p->ready %1% %2%", (int)p->ready(), p.get() );
             // all currently active & ready contexts get priority over new
             // posted tasks.  
-            while( my->ready_head ) {
+            while( my->ready_head && !p->ready() ) {
                 context_t* cur  = my->current;
                 context_t* next = my->ready_pop_front();
                 my->current = next;
                 next->resume();
+                if( next->is_complete() ) {
+            //       elog( "next complete!!" ); 
+                   delete next;
+                }
                 my->current = cur;
                 my->check_for_timeouts();
+            }
+            if( p->ready() ) {
+                //slog( "!p->ready %1% %2%", (int)p->ready(), p.get() );
+                return;
             }
             task::ptr next = my->dequeue();
             if( !next ) {
@@ -303,6 +292,7 @@ namespace boost { namespace cmt {
                 boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
                 if( !(next = my->dequeue())) {
                     if( timeout_time == -1 ) {
+                        slog( "wait..." );
                         my->task_ready.wait( lock );
                     } else {
                         slog( "timeout_time %1%   to_ptime %2%", timeout_time, 
@@ -316,6 +306,39 @@ namespace boost { namespace cmt {
             next->run();
             next->release();
         }
+    }
+
+    /**
+     *  If no current context, create a new context running exec()
+     *  If a current context exists, process tasks until the queue is
+     *  empty and then block.
+     */
+    void thread::exec() {
+        if( !my->current ) {
+            while( true ) {
+                // run ready tasks
+                while( my->ready_head ) {
+                    context_t* next = my->ready_pop_front();
+                    next->resume();
+                    if( next->is_complete() ) {
+                      // elog( "next complete!!" ); 
+                       delete next;
+                    }
+                    my->current = 0;
+                    my->check_for_timeouts();
+                }
+                //wlog( "creating new context" );
+                // create a new coro if there are no ready tasks
+                context_t* new_context = new context_t( boost::bind(&thread::exec,this), 
+                                                 bc::protected_stack( bc::stack_helper::default_stacksize() ), true, true );
+                my->current = new_context;
+                my->current->resume(); 
+                delete my->current;
+                my->current = 0;
+            }
+        }
+        stack_retainable<promise<void> > forever; 
+        exec_until( promise_base::ptr(&forever,true) );
    }
 
     /**
@@ -360,6 +383,7 @@ namespace boost { namespace cmt {
        async(task::ptr( new vtask(t) ) );
     }
     void thread::async( const task::ptr& t ) {
+        //slog( "async..." );
         task::ptr stale_head = my->task_in_queue.load(boost::memory_order_relaxed);
         do {
             t->next = stale_head;
@@ -369,6 +393,7 @@ namespace boost { namespace cmt {
             boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
             my->task_ready.notify_all();
         }
+        //slog( "return.." );
     }
     void yield() { thread::current().yield(); }
 

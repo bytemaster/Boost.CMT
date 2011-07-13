@@ -25,7 +25,6 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
-#include <boost/utility/base_from_member.hpp>
 #include <boost/asio/basic_socket.hpp>
 #include <boost/asio/detail/throw_error.hpp>
 #include <boost/asio/io_service.hpp>
@@ -82,7 +81,6 @@ template <typename Protocol,
     typename StreamSocketService = stream_socket_service<Protocol> >
 class basic_socket_streambuf
   : public std::streambuf,
-    private boost::base_from_member<io_service>,
     public basic_socket<Protocol, StreamSocketService>
 {
 public:
@@ -92,8 +90,7 @@ public:
   /// Construct a basic_socket_streambuf without establishing a connection.
   basic_socket_streambuf()
     : basic_socket<Protocol, StreamSocketService>(
-    // TODO: default_io_service!
-        boost::base_from_member<boost::asio::io_service>::member),
+        boost::cmt::asio::default_io_service() ),
       unbuffered_(false)
   {
     init_buffers();
@@ -120,8 +117,10 @@ public:
     boost::system::error_code ec;
     this->basic_socket<Protocol, StreamSocketService>::close(ec);
     //TODO: MAKE ASYNC
-    this->basic_socket<Protocol, StreamSocketService>::connect(endpoint, ec);
-    return !ec ? this : 0;
+    stack_retainable<promise<boost::system::error_code> > p;
+    this->basic_socket<Protocol, StreamSocketService>::async_connect(endpoint, 
+                       boost::bind( boost::cmt::asio::detail::error_handler_ec, &p, _1 ));
+    return !p.wait() ? this : 0;
   }
 
 #if defined(GENERATING_DOCUMENTATION)
@@ -168,7 +167,7 @@ protected:
       this->service.async_receive(
           this->implementation,
           boost::asio::buffer(boost::asio::buffer(get_buffer_) + putback_max),
-          0, boost::bind( boost::cmt::asio::detail::read_write_handler_ecp, &p, &ec, _1, _2 ));
+          0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
       std::size_t bytes_transferred = p.wait();    
       if (ec)
         return traits_type::eof();
@@ -202,12 +201,12 @@ protected:
 
       //      this->service.send(this->implementation,
       //          boost::asio::buffer(&ch, sizeof(char_type)), 0, ec);
-        promise<size_t>::ptr p(new promise<size_t>());
+      stack_retainable<promise<size_t> > p;
         this->service.async_send(
             this->implementation,
             boost::asio::buffer(&ch, sizeof(char_type)),
-            0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, p, &ec, _1, _2 ));
-        std::size_t bytes_transferred = p->wait();  
+            0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
+        std::size_t bytes_transferred = p.wait();  
         if (ec)
           return traits_type::eof();
         return c;
@@ -224,11 +223,11 @@ protected:
  //       std::size_t bytes_transferred = boost::cmt::asio::write_some( this->implementation, 
   //                                      boost::asio::buffer(buffer), ec);
                                         
-        promise<size_t>::ptr p(new promise<size_t>());
+       stack_retainable<promise<size_t> > p;
         this->service.async_send(
             this->implementation, boost::asio::buffer(buffer),
-            0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, p, &ec, _1, _2 ));
-        std::size_t bytes_transferred = p->wait();  
+            0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
+        std::size_t bytes_transferred = p.wait();  
         if (ec)
           return traits_type::eof();
         buffer = buffer + bytes_transferred;
@@ -282,7 +281,7 @@ private:
     typedef typename Protocol::resolver resolver_type;
     typedef typename resolver_type::iterator iterator_type;
     resolver_type resolver(
-        boost::base_from_member<boost::asio::io_service>::member);
+        boost::cmt::asio::default_io_service() );
     iterator_type i = resolver.resolve(query, ec);
     if (!ec)
     {

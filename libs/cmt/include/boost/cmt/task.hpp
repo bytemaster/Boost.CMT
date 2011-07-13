@@ -105,6 +105,32 @@ namespace boost { namespace cmt {
             const boost::function<R()>& m_functor;
             typename promise<R>::ptr    m_prom;
     };
+    template<>
+    class reftask<void> : public task {
+            reftask( const boost::function<void()>& f, const typename promise<void>::ptr& p, const char* name = "" )
+            :m_functor(f),m_prom(p),m_name(name){}
+
+            void cancel() {
+                try {
+                    BOOST_THROW_EXCEPTION( error::task_canceled() );
+                } catch ( ... ) {
+                    m_prom->set_exception(boost::current_exception());
+                }
+            }
+            void run() {
+                try {
+                    m_functor();
+                    m_prom->set_value( void_t());
+                } catch( ... ) {
+                    m_prom->set_exception(boost::current_exception());
+                }
+            }
+            const char* name() { return m_name; }
+
+            const char*                    m_name;
+            const boost::function<void()>& m_functor;
+            typename promise<void>::ptr    m_prom;
+    };
 
 
     class vtask : public task {

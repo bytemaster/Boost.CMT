@@ -57,7 +57,7 @@ void main2() {
 }
 
 void bench() {
-    async<void_t>(delay).wait();
+  //  async<void_t>(delay).wait();
     //uint64_t cnt = 1000000;
     uint64_t cnt = 10;
     wlog( "done waiting on delay" );
@@ -138,9 +138,9 @@ int main( int argc, char** argv )
     slog( "done" );
     */
     slog( "test usleep 1s" );
-    boost::cmt::thread::current().usleep(1000000);
+//    boost::cmt::thread::current().usleep(1000000);
     slog( "done usleep 1s" );
-    bench();
+//    bench();
     async(bench);
    // async(main2);
     boost::cmt::exec();

@@ -21,3 +21,9 @@ libs/cmt/thread_test
 libs/context/example/dan
 
 libs/cmt/cmt_test
+
+libs/context/example/fcontext_test
+
+libs/context/example/do_return_test
+
+libs/context/example/exit_test

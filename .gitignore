@@ -9,3 +9,15 @@ CMakeCache.txt
 *.dylib
 Makefile
 CMakeFiles
+
+libs/context/example/unwind_test
+
+libs/context/example/swap_test
+
+libs/context/example/link_test
+
+libs/cmt/thread_test
+
+libs/context/example/dan
+
+libs/cmt/cmt_test

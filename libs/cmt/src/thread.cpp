@@ -1,6 +1,5 @@
 #include <boost/cmt/thread.hpp>
 #include <boost/context/all.hpp>
-#include <boost/lockfree/fifo.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>

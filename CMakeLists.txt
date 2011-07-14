@@ -24,6 +24,4 @@ INCLUDE( SetupTargetMacros )
 #ADD_DEFINITIONS( -D_XOPEN_SOURCE )
 
 
-ADD_SUBDIRECTORY( libs/cmt )
-ADD_SUBDIRECTORY( libs/rpc )
-ADD_SUBDIRECTORY( libs/context )
+add_subdirectory(libs)

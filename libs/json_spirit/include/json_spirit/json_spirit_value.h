@@ -73,8 +73,42 @@ namespace json_spirit
         Object& get_obj();
         Array&  get_array();
 
+        const Value_impl& operator[]( const std::string& key )const {
+            const Object& obj = get_obj();
+            typename Object::const_iterator itr = obj.begin();
+            while( itr != obj.end() ) {
+                if( itr->name_ == key ) return itr->value_;
+                ++itr;
+            }
+            throw std::out_of_range( key );
+        }
+        const Value_impl& operator[]( uint32_t index )const {
+            return get_array()[index];
+        }
+
+        Value_impl& operator[]( const std::string& key ){
+            Object& obj = get_obj();
+            typename Object::iterator itr = obj.begin();
+            while( itr != obj.end() ) {
+                if( itr->name_ == key ) return itr->value_;
+                ++itr;
+            }
+            obj.push_back( Config::Pair_type( key, Value_impl() ) );
+            return obj.back().value_;
+        }
+        Value_impl& operator[]( uint32_t index ){
+            Array& a = get_array();
+            if( index >= a.size() ) 
+                a.resize( index+1);
+            return a[index];
+        }
+
+        template<typename T>
+        operator T()const {
+            return get_value<T>();
+        }
+        
         template< typename T > T get_value() const;  // example usage: int    i = value.get_value< int >();
-                                                     // or             double d = value.get_value< double >();
 
         static const Value_impl null;
 

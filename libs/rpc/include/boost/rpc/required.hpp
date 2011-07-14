@@ -11,6 +11,8 @@ namespace boost { namespace rpc {
         required( const T& v )
         :boost::optional<T>(v){}
 
+        operator T& ()            { return **this; }
+        operator const T& ()const { return **this; }
         using base::operator=;
         using base::operator*;
         using base::operator!;

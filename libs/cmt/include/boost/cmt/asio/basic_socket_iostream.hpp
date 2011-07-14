@@ -87,6 +87,8 @@ class basic_socket_iostream
     public std::basic_iostream<char>
 {
 public:
+    typedef boost::shared_ptr<basic_socket_iostream> ptr;
+
   /// Construct a basic_socket_iostream without establishing a connection.
   basic_socket_iostream()
     : std::basic_iostream<char>(&this->boost::base_from_member<

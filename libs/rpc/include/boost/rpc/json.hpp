@@ -1,6 +1,8 @@
 #ifndef _BOOST_RPC_JSON_HPP_
 #define _BOOST_RPC_JSON_HPP_
 #include <boost/reflect/reflect.hpp>
+#include <boost/reflect/any.hpp>
+
 #include <boost/rpc/datastream.hpp>
 #include <boost/rpc/varint.hpp>
 #include <boost/rpc/required.hpp>
@@ -16,11 +18,10 @@
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/support/is_sequence.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
-#include <boost/rpc/json/json_spirit/json_spirit_value.h>
-#include <boost/rpc/json/json_spirit/json_spirit_writer.h>
-#include <boost/rpc/json/json_spirit/json_spirit_reader.h>
+#include <json_spirit/json_spirit_value.h>
+#include <json_spirit/json_spirit_writer.h>
+#include <json_spirit/json_spirit_reader.h>
 
-#include <boost/reflect/any.hpp>
 namespace boost { namespace rpc { namespace json {
 
     namespace js = json_spirit;
@@ -57,7 +58,6 @@ namespace boost { namespace rpc { namespace json {
     void pack( js::Value& jsv, const std::pair<Key,Value>& value );
     template<typename Value>
     void pack( js::Value& jsv, const std::map<std::string,Value>& value );
-
 
 
     template<typename T> 

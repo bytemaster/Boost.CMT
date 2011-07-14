@@ -12,7 +12,7 @@ using boost::optional;
 /**
  * Based upon the JSON-RPC 2.0 Specification
  */
-struct error_object
+struct error_object : public virtual boost::exception, public virtual std::exception
 {
     error_object( int32_t c = 0 )
     :code(c){}
@@ -23,6 +23,9 @@ struct error_object
     required<signed_int>  code;
     optional<std::string> message;
     optional<std::string> data;
+
+    const char*  what()const throw()    { return message ? (*message).c_str() : "error object";  }
+    virtual void rethrow()const         { BOOST_THROW_EXCEPTION(*this);                          }
 };
 
 /**

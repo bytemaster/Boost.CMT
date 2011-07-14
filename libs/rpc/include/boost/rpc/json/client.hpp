@@ -1,5 +1,5 @@
-#ifndef _BOOST_RPC_JSON_CONNECTION_HPP_
-#define _BOOST_RPC_JSON_CONNECTION_HPP_
+#ifndef _BOOST_RPC_JSON_CLIENT_HPP_
+#define _BOOST_RPC_JSON_CLIENT_HPP_
 #include <boost/rpc/json.hpp>
 
 namespace boost { namespace rpc { namespace json {
@@ -11,12 +11,11 @@ namespace boost { namespace rpc { namespace json {
                 ~client_base();
 
                 uint64_t next_id();
-                virtual void invoke( const js::Value& msg, js::Value& rtn );
+                virtual void invoke( const js::Value& msg, js::Value& rtn_msg );
 
             private:
                 class client_base_private* my;
         };
-
 
         struct rpc_functor
         {
@@ -31,10 +30,18 @@ namespace boost { namespace rpc { namespace json {
             ResultType operator()( const Seq& params ) {
                  obj[0].value_ = m_client.next_id();
                  pack( obj.back().value_, params );
+                 js::Value  rtn_msg;
+                 m_client.invoke( m_msg, rtn_msg );
                  ResultType  ret_val;
-                 m_client.invoke( m_msg, rtn );
-                 unpack( rtn, ret_val );
-                 return ret_val;
+                 if( value_contains( ret_msg, "result" ) )  {
+                     unpack( value_get(ret_msg,"result"), ret_val );
+                     return ret_val;
+                 }
+                 if( value_contains( ret_msg, "error" ) ) {
+                    error_object e;
+                    unpack( value_get(ret_msg,"result"), e );
+                    BOOST_THROW_EXCEPTION( e );
+                 }
             }
             client_base& m_client;
             js::Value    m_msg;
@@ -45,8 +52,7 @@ namespace boost { namespace rpc { namespace json {
      }  
 
     namespace tcp {
-        typedef boost::asio::ip::tcp::socket socket;
-        typedef boost::shared_ptr<socket>    socket_ptr;
+        typedef boost::cmt::asio::tcp::iostream::ptr sock_ios_ptr;
 
         template<typename InterfaceType>
         class client: public boost::reflect::visitor< client<InterfaceType> >, 
@@ -55,8 +61,8 @@ namespace boost { namespace rpc { namespace json {
         {
            public:
                typedef boost::shared_ptr<client> ptr;
-               client( const socket_ptr& s)
-               :m_sock(s)
+               client( const socket_ios_ptr& s)
+               :m_sock_ios(s)
                { 
                    start_visit(*this); 
                    boost::cmt::async( boost::bind(&client::read_loop,
@@ -64,12 +70,12 @@ namespace boost { namespace rpc { namespace json {
                }
 
                void invoke( const js::Value& msg, js::Value& rtn, uint64_t timeout_us=-1 ) {
-                   std::string m =  boost::rpc::json::to_json(msg);
-                   stack_retainable<boost::cmt::promise<jsValue> > p;
-                   boost::cmt::write( *m_sock, boost::asio::buffer(m.c_str(),m.size()) );
-                   m_promises.push_back(&p);
+                   stack_retainable<boost::cmt::promise<js::Value> > p;
+                   boost::rpc::json::to_json(m_sock, msg);
+                   int id = msg["id"].get_int();
+                   m_promises[id] = &p;
                    rtn = p.wait(timeout_us);
-                   m_promises.remove(&p);
+                   m_promises.erase(id);
                }
 
                template<typename InterfaceName, typename M>
@@ -79,11 +85,24 @@ namespace boost { namespace rpc { namespace json {
                }
            private:
                 void read_loop() {
-                    
+                    js::Stream_reader<boost::cmt::asio::tcp::iostream, js::Value> reader(*m_sock_ios);
+                    js::Value v;
+                    message m;
+                    while( reader.read_next(v) ) {
+                        boost::rpc::json::unapck( v, m ); 
+                        int id = *m.id;
+                        std::map<int,boost::cmt::promise_base*>::iterator itr = m_promises.find(id);
+                        if( itr != m_promises.end() ) {
+                            itr->second->set_value(v);
+                            m_promises.erase(itr);
+                        } else {
+                           elog( "Unexpected value: %1%", json_spirit::write_formated(v) );
+                        }
+                    }
                 }
 
-                socket_ptr                           m_sock;
-                std::list<boost::cmt::promise_base*> m_promises;
+                boost::cmt::asio::tcp::iostream::ptr    m_sock_ios;
+                std::map<int,boost::cmt::promise_base*> m_promises;
         };
     } // namespace tcp
 

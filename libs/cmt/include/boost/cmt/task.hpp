@@ -7,6 +7,7 @@
 #include <boost/function.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/cmt/log/log.hpp>
+#include <boost/cmt/usclock.hpp>
 
 namespace boost { namespace cmt {
      struct priority {
@@ -20,7 +21,7 @@ namespace boost { namespace cmt {
     class task : public retainable {
         public:
             typedef task* ptr;
-            task(priority p=priority()):next(0),prio(p){}
+            task(priority p=priority()):posted_us(usclock()),prio(p),next(0){}
 
             virtual void run() = 0;
             virtual void cancel() = 0;
@@ -28,6 +29,7 @@ namespace boost { namespace cmt {
         protected:
             friend class thread;
             friend class thread_private;
+            uint64_t     posted_us;
             priority     prio;
             task*        next;
     };

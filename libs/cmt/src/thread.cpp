@@ -86,7 +86,7 @@ namespace boost { namespace cmt {
            }
            struct task_priority_less {
                bool operator()( const task::ptr& a, const task::ptr& b ) {
-                   return a->prio.value < b->prio.value;
+                   return a->prio.value < b->prio.value ? true :  (a->prio.value > b->prio.value ? false : a->posted_us > b->posted_us );
                }
            };
            void enqueue( const task::ptr& t ) {

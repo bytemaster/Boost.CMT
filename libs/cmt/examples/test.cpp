@@ -120,6 +120,24 @@ void bench() {
     }
     stop = boost::posix_time::microsec_clock::universal_time();
     slog( "%1% calls/sec", ((group_size*cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
+
+
+    start = boost::posix_time::microsec_clock::universal_time();
+    for( uint32_t i = 0; i < cnt; ++i ) {
+        try {
+           // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
+           for( uint32_t f = 0; f < group_size; ++f ) {
+            futures[f] = async<int>( boost::bind(hello, i*group_size+f), "hello_func" );//2000000);
+           }
+           for( uint32_t f = 0; f < group_size; ++f ) {
+            futures[f].wait();
+           }
+        } catch( const boost::exception& e ) {
+                elog( "%1%", boost::diagnostic_information(e) );
+        }
+    }
+    stop = boost::posix_time::microsec_clock::universal_time();
+    slog( "%1% calls/sec", ((group_size*cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
 }
 
 int main( int argc, char** argv )

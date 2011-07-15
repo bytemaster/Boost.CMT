@@ -27,3 +27,7 @@ libs/context/example/fcontext_test
 libs/context/example/do_return_test
 
 libs/context/example/exit_test
+
+libs/cmt/examples/tcp_ios
+
+libs/cmt/examples/cmt_test

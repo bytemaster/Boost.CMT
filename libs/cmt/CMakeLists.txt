@@ -10,6 +10,7 @@ SET( sources
             src/thread.cpp
             src/asio/acceptor.cpp
             src/asio/udp/socket.cpp
+            src/asio/tcp/socket.cpp
              )
 
 SETUP_LIBRARY( boost_cmt SOURCES ${sources}

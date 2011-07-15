@@ -28,6 +28,14 @@ libs/context/example/do_return_test
 
 libs/context/example/exit_test
 
+<<<<<<< HEAD
 libs/cmt/examples/tcp_ios
 
 libs/cmt/examples/cmt_test
+=======
+libs/rpc/examples/rpcs
+
+libs/cmt/examples/cmt_test
+
+libs/cmt/examples/tcp_ios
+>>>>>>> c8532b9e1bc60d9d50223a6d925c7f8903418f56

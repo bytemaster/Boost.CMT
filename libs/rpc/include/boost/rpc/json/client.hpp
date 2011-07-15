@@ -101,7 +101,6 @@ namespace boost { namespace rpc { namespace json {
                     }
                 }
 
-                boost::cmt::asio::tcp::iostream::ptr    m_sock_ios;
                 std::map<int,boost::cmt::promise_base*> m_promises;
         };
     } // namespace tcp

@@ -172,4 +172,11 @@
     };
 
 
+#undef n
+#undef PARAM_NAMES         
+#undef PARAM_PLACE_HOLDERS
+#undef PARAM_ARGS        
+#undef PARAM_TYPE_NAMES 
+#undef PARAM_TYPES     
+
 #endif // BOOST_PP_IS_ITERATING

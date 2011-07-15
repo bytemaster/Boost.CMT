@@ -1,14 +1,14 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include "calculator.hpp"
-#include "rpc.hpp"
 #include <boost/lexical_cast.hpp>
+#include <boost/cmt/thread.hpp>
 
 class CalculatorServer
 {
     public:
         CalculatorServer():m_result(0){}
 
-        std::string name()const            { return "CalculatorServer"; }
+        std::string name()const            { return "CalculatorServer";  }
         int   exit()                       { ::exit(0);                  }
         double add( double v )             { return m_result += v;       }
         double sub( double v )             { return m_result -= v;       }
@@ -22,8 +22,7 @@ class CalculatorServer
         double m_result;
 };
 
-int main( int argc, char** argv )
-{
+int main2( int argc, char** argv ) {
     if( argc <= 1 )
     {
         std::cerr << "Usage: rpc_server PORT\n";
@@ -31,14 +30,25 @@ int main( int argc, char** argv )
     }
     using namespace boost;
     try {
+
+        /*
         boost::shared_ptr<CalculatorServer> calc(new CalculatorServer());
         reflect::rpc_server<Calculator> server( calc );
         server.listen( lexical_cast<uint16_t>(argv[1]) );
+        */
     } catch ( const boost::exception& e )
     {
         std::cerr << boost::diagnostic_information(e) << std::endl;
     }
     return 0;
 }
+
+int main( int argc, char** argv )
+{
+    boost::cmt::async( boost::bind(main2, argc, argv) );
+    boost::cmt::exec();
+    return 0;
+}
+
 
 

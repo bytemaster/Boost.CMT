@@ -6,7 +6,7 @@
 
 // json spirit version 4.04
 
-#include "json_spirit_value.h"
+#include <json_spirit/json_spirit_value.h>
 
 #include <cassert>
 #include <sstream>

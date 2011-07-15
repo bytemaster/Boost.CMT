@@ -102,6 +102,8 @@ namespace boost { namespace cmt { namespace asio {
             sock.async_connect( ep, boost::bind( detail::error_handler, p, _1 ) );
             return p->wait(timeout_us);
         }
+
+
     }
     namespace udp {
         typedef boost::asio::ip::udp::endpoint endpoint;

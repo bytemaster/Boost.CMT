@@ -8,12 +8,14 @@ include_directories( ../atomic/include )
 
 add_subdirectory( examples)
 
+SET( libraries json_spirit )
 SET( sources 
-    src/json/connection.cpp
+    src/json/tcp/connection.cpp
+    src/json/tcp/server.cpp
              )
 
 SETUP_LIBRARY( boost_rpc SOURCES ${sources}
-                         LIBRARIES 
+                         LIBRARIES  ${libraries}
                          LIBRARY_TYPE STATIC )
  
 

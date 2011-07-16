@@ -164,11 +164,13 @@ protected:
     {
       boost::system::error_code ec;
       stack_retainable<promise<size_t> > p;
+      slog( "start async recv..." );
       this->service.async_receive(
           this->implementation,
           boost::asio::buffer(boost::asio::buffer(get_buffer_) + putback_max),
           0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
       std::size_t bytes_transferred = p.wait();    
+      slog( "end async recv..." );
       if (ec)
         return traits_type::eof();
       setg(get_buffer_.begin(), get_buffer_.begin() + putback_max,
@@ -201,12 +203,14 @@ protected:
 
       //      this->service.send(this->implementation,
       //          boost::asio::buffer(&ch, sizeof(char_type)), 0, ec);
+      slog( "start async send..." );
       stack_retainable<promise<size_t> > p;
         this->service.async_send(
             this->implementation,
             boost::asio::buffer(&ch, sizeof(char_type)),
             0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
         std::size_t bytes_transferred = p.wait();  
+      slog( "sent...%1%", bytes_transferred );
         if (ec)
           return traits_type::eof();
         return c;
@@ -223,11 +227,13 @@ protected:
  //       std::size_t bytes_transferred = boost::cmt::asio::write_some( this->implementation, 
   //                                      boost::asio::buffer(buffer), ec);
                                         
+      slog( "start async send..." );
        stack_retainable<promise<size_t> > p;
         this->service.async_send(
             this->implementation, boost::asio::buffer(buffer),
             0, boost::bind( boost::cmt::asio::detail::read_write_handler_ec, &p, &ec, _1, _2 ));
         std::size_t bytes_transferred = p.wait();  
+      slog( "sent...%1%", bytes_transferred );
         if (ec)
           return traits_type::eof();
         buffer = buffer + bytes_transferred;
@@ -263,6 +269,7 @@ protected:
   }
 
 private:
+
   void init_buffers()
   {
     setg(get_buffer_.begin(),

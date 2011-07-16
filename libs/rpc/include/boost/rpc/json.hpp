@@ -231,24 +231,24 @@ namespace boost { namespace rpc { namespace json {
     }
 
     template<typename T>
-    void pack( js::Value& jsv, const boost::optional<T>& v ) {
+    inline void pack( js::Value& jsv, const boost::optional<T>& v ) {
         boost::rpc::json::pack( jsv, *v );
     }
 
     template<typename T>
-    void pack( js::Value& jsv, const required<T>& v ) {
+    inline void pack( js::Value& jsv, const required<T>& v ) {
         if( !v ) BOOST_THROW_EXCEPTION( boost::rpc::required_field_not_set() );
         boost::rpc::json::pack( jsv, *v );
     }
     template<typename T>
-    void unpack( const js::Value& jsv, required<T>& v ) {
+    inline void unpack( const js::Value& jsv, required<T>& v ) {
         v = T();
         boost::rpc::json::unpack( jsv, *v );
     }
 
 
     template<typename T, typename Alloc, template<typename,typename> class Container>
-    void pack( js::Value& jsv, const Container<T,Alloc>& value ) {
+    inline void pack( js::Value& jsv, const Container<T,Alloc>& value ) {
         jsv = js::Array();
         js::Array& a = jsv.get_array();
         a.resize(value.size());
@@ -263,7 +263,7 @@ namespace boost { namespace rpc { namespace json {
     }
 
     template<typename T, typename Alloc, template<typename,typename> class Container>
-    void unpack( const js::Value& jsv, Container<T,Alloc>& value ) {
+    inline void unpack( const js::Value& jsv, Container<T,Alloc>& value ) {
         const js::Array& a = jsv.get_array();
         value.resize( a.size() );
         typename Container<T,Alloc>::iterator itr = value.begin();
@@ -278,7 +278,7 @@ namespace boost { namespace rpc { namespace json {
 
     // support for pair!
     template<typename Key, typename Value>
-    void pack( js::Value& jsv, const std::pair<Key,Value>& value ) {
+    inline void pack( js::Value& jsv, const std::pair<Key,Value>& value ) {
         jsv = js::Object();
         jsv.get_obj().push_back( js::Pair( "first", js::Value() ) );
         boost::rpc::json::pack(jsv.get_obj().back().value_, value.first );
@@ -316,7 +316,7 @@ namespace boost { namespace rpc { namespace json {
     }
 
     template<typename Key, typename Value>
-    void unpack( const js::Value& jsv, std::map<Key,Value>& value ) {
+    inline void unpack( const js::Value& jsv, std::map<Key,Value>& value ) {
         const js::Array& a = jsv.get_array();
         value.clear();
         for( uint32_t i = 0; i < a.size(); ++i ) {
@@ -326,10 +326,10 @@ namespace boost { namespace rpc { namespace json {
         }
     }
 
-    void pack( js::Value& jsv, const std::vector<char>& data ) {
+    inline void pack( js::Value& jsv, const std::vector<char>& data ) {
        if( data.size() ) { pack( jsv, base64_encode((unsigned char*)&data.front(),data.size())); } 
     }
-    void unpack( const js::Value& jsv, std::vector<char>& data ) {
+    inline void unpack( const js::Value& jsv, std::vector<char>& data ) {
         data.clear();
         std::string d = base64_decode(jsv.get_str());
         data.insert(data.begin(),d.begin(),d.end());

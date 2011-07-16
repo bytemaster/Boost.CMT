@@ -8,6 +8,7 @@ SET( sources
             src/usclock.cpp
             src/future.cpp
             src/thread.cpp
+            src/asio.cpp
             src/asio/acceptor.cpp
             src/asio/udp/socket.cpp
             src/asio/tcp/socket.cpp

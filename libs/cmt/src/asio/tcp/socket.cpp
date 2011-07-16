@@ -1,4 +1,5 @@
 #include <boost/cmt/asio/tcp/socket.hpp>
+#include <boost/cmt/asio.hpp>
 #include <boost/cmt/thread.hpp>
 
 namespace boost { namespace cmt { namespace asio { namespace tcp {
@@ -60,7 +61,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         }
 
         // perform an async operation to read the rest 
-        return boost::cmt::asio::tcp::read_some( *this, boost::asio::buffer(buf,size) );
+        return boost::cmt::asio::read_some( *this, boost::asio::buffer(buf,size) );
     }
     size_t socket::read( char* buf, size_t size )
     {
@@ -100,19 +101,19 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
                 return r + size;
                     
             }
-            return r + boost::cmt::asio::tcp::read( *this, boost::asio::buffer(buf,size) );
+            return r + boost::cmt::asio::read( *this, boost::asio::buffer(buf,size) );
          } catch ( const boost::exception& e ) {
             elog( "%1%", boost::diagnostic_information(e) );
             return -1;
          }
     }
 
-    iterator socket::iterator::operator++(int) {
+    socket::iterator socket::iterator::operator++(int) {
         iterator tmp = *this;
         ++*this;
         return tmp;
     }
-    iterator& socket::iterator::operator++() {
+    socket::iterator& socket::iterator::operator++() {
         try {
             s->read(&value,1);
         } catch ( const boost::exception& e ) {
@@ -134,7 +135,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             size_t      size   = write_buf[write_buf_idx].size();
 
             do {
-                size_t wrote = boost::cmt::asio::tcp::write(*this,boost::asio::buffer(buffer, size - total_wrote) );
+                size_t wrote = boost::cmt::asio::write(*this,boost::asio::buffer(buffer, size - total_wrote) );
                 r += wrote;
                 buffer += wrote;
                 total_wrote += wrote;
@@ -183,9 +184,9 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             cur_write_buf = &write_buf[cur_wbuf_idx];
         }
         if( cur_write_buf->size() > 1024*1024 * 16 )
-            rout( warn, "TCP write buffer size %1%kb", %(cur_write_buf->size()/1024) );
+            wlog( "TCP write buffer size %1%kb", (cur_write_buf->size()/1024) );
 
         return size;
     }
 
-} // namespace fl
+} } } }  // namespace boost::cmt::asio::tcp

@@ -156,8 +156,10 @@ namespace boost { namespace cmt {
                 m_functor();
             } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
+            } catch( const std::exception& e ) {
+                elog( "%1%", boost::diagnostic_information(e) );
             } catch( ... ) {
-                assert( !"unhandled exception" );
+                BOOST_ASSERT(!"unhandled exception");
             }
         }
         boost::function<void()> m_functor;

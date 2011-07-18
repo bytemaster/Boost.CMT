@@ -105,6 +105,9 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
          } catch ( const boost::exception& e ) {
             elog( "%1%", boost::diagnostic_information(e) );
             return -1;
+         } catch ( const std::exception& e ) {
+            elog( "%1%", boost::diagnostic_information(e) );
+            return -1;
          }
     }
 
@@ -114,10 +117,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         return tmp;
     }
     socket::iterator& socket::iterator::operator++() {
-        try {
-            s->read(&value,1);
-        } catch ( const boost::exception& e ) {
-            wlog( "%1%", boost::diagnostic_information(e) );
+        if( 1 != s->read(&value,1) ) {
             s = NULL;
         }
         return *this;
@@ -127,7 +127,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
      *  This method will loop until both write_buf's are empty.
      *
      */
-    void    socket::write_loop( uint8_t write_buf_idx ) {
+    void socket::write_loop( uint8_t write_buf_idx ) {
         do {
             size_t r = 0;
             size_t total_wrote = 0;
@@ -160,7 +160,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
      *  Alternate between two buffers, fill one while asio is writing the other,
      *  then switch.
      */
-    size_t  socket::write( const char* buffer, size_t size )
+    size_t socket::write( const char* buffer, size_t size )
     {
         if( size == 0 ) 
             return 0;
@@ -177,14 +177,11 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         cur_write_buf->resize( wpos + size );
         memcpy( &(*cur_write_buf)[wpos], buffer, size );
 
-        if( first )
-        {
+        if( first ) {
             boost::cmt::async( boost::bind( &socket::write_loop, this, cur_wbuf_idx ) );
             cur_wbuf_idx = (cur_wbuf_idx+1)&0x01;
             cur_write_buf = &write_buf[cur_wbuf_idx];
         }
-        if( cur_write_buf->size() > 1024*1024 * 16 )
-            wlog( "TCP write buffer size %1%kb", (cur_write_buf->size()/1024) );
 
         return size;
     }

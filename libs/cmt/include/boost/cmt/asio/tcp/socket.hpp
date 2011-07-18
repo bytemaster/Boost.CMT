@@ -19,12 +19,14 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             /**
              * Reads one element at a time.
              */
-            struct iterator {
+            struct iterator : public std::iterator<std::input_iterator_tag,char,void> {
                 iterator( boost::cmt::asio::tcp::socket* _s = NULL)
-                :s(_s){}
+                :s(_s){ if(_s){++*this;}  }
 
                 inline const char& operator*()const  { return value;  }
                 inline const char* operator->()const { return &value; }
+                inline char& operator*() { return value;  }
+                inline char* operator->(){ return &value; }
 
                 iterator& operator++();
                 iterator operator++(int);

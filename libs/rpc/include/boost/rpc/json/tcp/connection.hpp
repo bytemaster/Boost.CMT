@@ -1,13 +1,14 @@
-#ifndef _BOOST_RPC_JSON_CONNECTION_HPP_
-#define _BOOST_RPC_JSON_CONNECTION_HPP_
+#ifndef _BOOST_RPC_JSON_TCP_CONNECTION_HPP_
+#define _BOOST_RPC_JSON_TCP_CONNECTION_HPP_
 #include <boost/rpc/json.hpp>
 #include <boost/cmt/thread.hpp>
+#include <boost/rpc/json/connection.hpp>
 #include <boost/cmt/asio/tcp/socket.hpp>
 #include <boost/cmt/asio/tcp.hpp>
 
 namespace boost { namespace rpc { namespace json { namespace tcp {
 
-    class connection : public boost::cmt::retainable {
+    class connection : public boost::rpc::json::connection {
         public:
             typedef boost::cmt::retainable_ptr<connection> ptr;
             typedef boost::cmt::asio::tcp::socket::ptr     sock_ptr;

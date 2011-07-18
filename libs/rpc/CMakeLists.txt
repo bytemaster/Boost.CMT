@@ -11,6 +11,8 @@ add_subdirectory( examples)
 SET( libraries json_spirit )
 SET( sources 
     src/json/tcp/connection.cpp
+    src/json/client.cpp
+    src/json/server.cpp
     src/json/tcp/server.cpp
              )
 

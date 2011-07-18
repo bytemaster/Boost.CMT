@@ -20,6 +20,8 @@ struct error_object : public virtual boost::exception, public virtual std::excep
     error_object( int32_t c, const std::string& msg )
     :code(c),message(msg){}
 
+    ~error_object() throw() {}
+
     required<signed_int>  code;
     optional<std::string> message;
     optional<std::string> data;

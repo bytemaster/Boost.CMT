@@ -86,6 +86,16 @@ namespace json_spirit
             return get_array()[index];
         }
 
+        bool contains( const std::string& key ) const {
+            const Object& obj = get_obj();
+            typename Object::const_iterator itr = obj.begin();
+            while( itr != obj.end() ) {
+                if( itr->name_ == key ) return true;
+                ++itr;
+            }
+            return false;
+        }
+
         Value_impl& operator[]( const std::string& key ){
             Object& obj = get_obj();
             typename Object::iterator itr = obj.begin();
@@ -93,7 +103,7 @@ namespace json_spirit
                 if( itr->name_ == key ) return itr->value_;
                 ++itr;
             }
-            obj.push_back( Config::Pair_type( key, Value_impl() ) );
+            obj.push_back( typename Config::Pair_type( key, Value_impl() ) );
             return obj.back().value_;
         }
         Value_impl& operator[]( uint32_t index ){

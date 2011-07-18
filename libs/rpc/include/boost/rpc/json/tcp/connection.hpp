@@ -2,17 +2,17 @@
 #define _BOOST_RPC_JSON_CONNECTION_HPP_
 #include <boost/rpc/json.hpp>
 #include <boost/cmt/thread.hpp>
+#include <boost/cmt/asio/tcp/socket.hpp>
 #include <boost/cmt/asio/tcp.hpp>
-#include <boost/cmt/mutex.hpp>
 
 namespace boost { namespace rpc { namespace json { namespace tcp {
 
     class connection : public boost::cmt::retainable {
         public:
             typedef boost::cmt::retainable_ptr<connection> ptr;
-            typedef boost::cmt::asio::tcp::iostream::ptr   sock_ios_ptr;
+            typedef boost::cmt::asio::tcp::socket::ptr     sock_ptr;
 
-            connection( const sock_ios_ptr& s );
+            connection( const sock_ptr& s );
             connection(){}
 
             bool connect( const std::string& hostname, const std::string& port );
@@ -23,8 +23,7 @@ namespace boost { namespace rpc { namespace json { namespace tcp {
         private:
             void read_loop();
             boost::function<void(const js::Value& v)> m_recv_handler;
-            boost::cmt::asio::tcp::iostream::ptr      m_sock_ios;
-            boost::cmt::mutex                         m_mutex;
+            sock_ptr                                  m_sock;
     };
 
 } } } } // boost::rpc::json::tcp

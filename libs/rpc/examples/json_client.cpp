@@ -31,6 +31,7 @@ int async_main( int argc, char** argv ) {
         while( read_thread->sync<bool>( 
                boost::bind(&js::Stream_reader<std::istream,js::Value>::read_next, &reader, boost::ref(v) )  ) ) {
             con->send(v);
+            v = js::Value();
         }
 
     } catch ( const boost::exception& e )

@@ -10,15 +10,23 @@ void handle_json( const js::Value& v ) {
 }
 
 void on_recv( const boost::rpc::json::tcp::connection::ptr& c, const js::Value& v ) {
-    std::cerr<<"server:";
-    json_spirit::write(v,std::cerr);
-    std::cerr<<std::endl;
-    c->send(v);
+    try {
+        std::cerr<<"server:";
+        json_spirit::write(v,std::cerr);
+        std::cerr<<std::endl;
+        c->send(v);
+    } catch ( const boost::exception& e  ) {
+        elog( "%1%", boost::diagnostic_information(e) );
+    }
 }
 
 void on_connection( const boost::rpc::json::tcp::connection::ptr& c ) {
-    slog( "new connection" );
-    c->set_recv_handler( boost::bind( on_recv, c, _1 ) );
+    try {
+        slog( "new connection" );
+        c->set_recv_handler( boost::bind( on_recv, c, _1 ) );
+    } catch ( const boost::exception& e  ) {
+        elog( "%1%", boost::diagnostic_information(e) );
+    }
 }
 
 int async_main( int argc, char** argv ) {

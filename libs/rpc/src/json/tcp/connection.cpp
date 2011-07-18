@@ -1,24 +1,24 @@
 #include <boost/rpc/json/tcp/connection.hpp>
-#include <json_spirit/json_spirit_stream_reader.h>
-#include <boost/thread/mutex.hpp>
+#include <json_spirit/json_spirit_reader_template.h>
 
 namespace boost { namespace rpc { namespace json { namespace tcp {
-    connection::connection( const connection::sock_ios_ptr& p )
-    :m_sock_ios(p) {
+    connection::connection( const connection::sock_ptr& p )
+    :m_sock(p) {
     }
 
     bool connection::connect( const std::string& hostname, const std::string& port ) {
-        m_sock_ios = sock_ios_ptr( new boost::cmt::asio::tcp::iostream() );
-        m_sock_ios->connect( boost::cmt::asio::tcp::resolve( hostname, port ).front() );
-        return *m_sock_ios;
+        m_sock = sock_ptr( new boost::cmt::asio::tcp::socket() );
+        boost::system::error_code ec= m_sock->connect( boost::cmt::asio::tcp::resolve( hostname, port ).front() );
+        if( !ec ) {
+            elog( "%1%", boost::system::system_error(ec).what() );
+        }
+        return true;
     }
 
     void connection::send( const js::Value& v ) {
-       std::cerr<<"send:"<<std::endl;
-       json_spirit::write(v,std::cerr);
-       boost::unique_lock<boost::cmt::mutex> lock(m_mutex);
-       json_spirit::write(v, *m_sock_ios);
-       m_sock_ios->flush();
+       std::stringstream ss;
+       json_spirit::write(v,ss);
+       m_sock->write(ss.str().c_str(),ss.str().size());
     }
 
     void connection::set_recv_handler( const boost::function<void(const js::Value& v )>& v ) {
@@ -27,15 +27,36 @@ namespace boost { namespace rpc { namespace json { namespace tcp {
     }
 
     void connection::read_loop() {
-        js::Value v;
-        js::Stream_reader<boost::cmt::asio::tcp::iostream, js::Value> reader(*m_sock_ios);
-        while( reader.read_next(v) ) {
-            std::cerr<<"recv:";
-            json_spirit::write(v,std::cerr);
-            std::cerr<<std::endl;
-            m_recv_handler(v);
-            v = js::Value();
+        try {
+            js::Value v;
+            boost::cmt::asio::tcp::socket::iterator itr(m_sock.get());
+            boost::cmt::asio::tcp::socket::iterator end;
+            std::string buf;
+
+            int depth = 0;
+            int quote = 0;
+            while( itr != end ) {
+                if( !quote ) {
+                    if( *itr == '{' ) ++depth;
+                    else if( *itr == '[' ) ++depth;
+                    else if( *itr == '}' ) --depth;
+                    else if( *itr == ']' ) --depth;
+                    else if( *itr == '"' ) quote = 1;
+                } else {
+                    if( *itr == '"' ) quote = 0;
+                }
+                buf.push_back(*itr);
+                if( depth == 0 ) {
+                    json_spirit::read( buf, v );
+                    m_recv_handler(v);
+                    buf.resize(0);
+                    v = js::Value();
+                }
+                ++itr;
+            }
+        } catch ( const std::exception& e ) {
+            elog( "%1%", boost::diagnostic_information(e) );
+            throw;
         }
-        elog( "error reading next" );
     }
 } } } }  // boost::rpc::json::tcp

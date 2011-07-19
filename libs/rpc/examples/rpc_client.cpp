@@ -44,7 +44,7 @@ void amain(int argc, char**argv ) {
         }
         rpc::json::client<Calculator>::ptr calc(new rpc::json::client<Calculator>(con));
         
-        reflect::any<Calculator> s;// = *calc;
+        reflect::any<Calculator> s;
         s= *calc;
         cli  m_cli;
         m_cli.start_visit(s);
@@ -55,12 +55,9 @@ void amain(int argc, char**argv ) {
         boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
         double sum = 0;
         int i = 0;
-        /*
-        for( i = 0; i < 10; ++i )
-        {
+        for( i = 0; i < 100000; ++i ) {
             sum += calc->add(5);
         }
-        */
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
         uint64_t us = (end-start).total_microseconds();
         std::cerr << i << " add(5) took  " << us << "us   " << double(i) / (us/1000000.0) << "invoke/sec\n";

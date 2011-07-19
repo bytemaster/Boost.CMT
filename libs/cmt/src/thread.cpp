@@ -191,8 +191,10 @@ namespace boost { namespace cmt {
 
     void thread::wait( const promise_base::ptr& p, uint64_t timeout_us ) {
         BOOST_ASSERT( &current() == this );
-        BOOST_ASSERT( !p->ready() );
         BOOST_ASSERT(my->current);
+
+        if( p->ready() )
+            return;
 
         if( timeout_us != -1 ) {
             my->current->resume_time = sys_clock() + timeout_us;

@@ -109,6 +109,8 @@ boost_fcontext_make PROC EXPORT
     mov  [eax+04h],   ecx           ; save the address of the next context
     mov  ecx,         [esp+0ch]     ; load the address of the void pointer arg2
     mov  [edx+04h],   ecx           ; save the address of the void pointer onto the context stack
+    stmxcsr [eax+018h]              ; save SSE2 control word
+    fnstcw  [eax+01ch]              ; save x87 control word
     mov  ecx,         boost_fcontext_link ; load helper code executed after fn() returns
     mov  [edx],       ecx           ; save helper code executed adter fn() returns
     xor  eax,         eax           ; set EAX to zero

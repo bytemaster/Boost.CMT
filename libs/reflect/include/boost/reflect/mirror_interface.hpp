@@ -18,7 +18,7 @@
             static M& do_get( C* c, M C::* m )
             { return c->*m; }
         }
-
+/* VC++ finds this ambigious with <R(Class::*)()> need another workaround... TTI?
         template<typename Class, typename MemberType>
         struct mirror_member<MemberType Class::*>
         {
@@ -66,6 +66,7 @@
             mirror_member& operator = ( const boost::function<MemberType&()> a ) { get = a; return *this; }
             boost::function<MemberType&()>                  get;
         };
+*/
         
         struct mirror_interface 
         {

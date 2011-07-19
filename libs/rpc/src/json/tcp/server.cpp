@@ -27,7 +27,7 @@ namespace boost { namespace rpc { namespace json { namespace tcp {
     }
 
     void listen( uint16_t port, const handler& handle ) {
-        boost::cmt::async( boost::bind( &detail::listen, port, handle ) );
+        boost::cmt::async( boost::bind( &boost::rpc::json::tcp::detail::listen, port, handle ) );
     }
 
 } } } } // boost::rpc::json::tcp

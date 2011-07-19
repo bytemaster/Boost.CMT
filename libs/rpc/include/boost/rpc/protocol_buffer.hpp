@@ -13,7 +13,7 @@
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 
 #include <iostream>
-#include <boost/rpc/log/log.hpp>
+#include <boost/cmt/log/log.hpp>
 
 namespace boost { namespace rpc { namespace protocol_buffer { 
 

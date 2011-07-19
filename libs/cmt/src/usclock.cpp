@@ -2,6 +2,12 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread_time.hpp>
+namespace boost { namespace cmt {
+boost::posix_time::ptime to_ptime( uint64_t t ) {
+    static boost::posix_time::ptime epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+    return epoch + boost::posix_time::seconds(long(t/1000000)) + boost::posix_time::microseconds(long(t%1000000));
+}
+} } // namespace boost::cmt
 #ifdef WIN32
 #include <winsock2.h>
 
@@ -57,6 +63,21 @@ namespace boost { namespace cmt {
 
 		return start_utc;
 	}
+	uint64_t sys_clock()
+{
+    static boost::posix_time::ptime epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+    static uint64_t start_utc = (boost::get_system_time() - epoch).total_microseconds();
+    static uint64_t start_us = usclock();
+    static uint64_t offset   = start_utc - start_us;
+
+    if( (usclock() / 1000000) % 10 == 0 ) {
+        start_utc = (boost::get_system_time() - epoch).total_microseconds();
+        start_us = usclock();
+        offset   = start_utc - start_us;
+    }
+
+    return offset + usclock();
+}
 } } // namespace boost::cmt
 
 
@@ -120,10 +141,7 @@ uint64_t sys_clock()
     return offset + usclock();
 }
 
-boost::posix_time::ptime to_ptime( uint64_t t ) {
-    static boost::posix_time::ptime epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
-    return epoch + boost::posix_time::seconds(t/1000000) + boost::posix_time::microseconds(t%1000000);
-}
+
 
 uint64_t sync_utc_clock()
 {

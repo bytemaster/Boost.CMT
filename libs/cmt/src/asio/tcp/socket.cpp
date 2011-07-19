@@ -1,10 +1,9 @@
 #include <boost/cmt/asio/tcp/socket.hpp>
 #include <boost/cmt/asio.hpp>
 #include <boost/cmt/thread.hpp>
-
+#include <boost/array.hpp>
 namespace boost { namespace cmt { namespace asio { namespace tcp {
-    using namespace boost::asio::ip;
-
+  
     socket::socket()
     :boost::asio::ip::tcp::socket( boost::cmt::asio::default_io_service() )
      ,read_buf(0),cur_write_buf(NULL), cur_wbuf_idx(0), read_pos(0),last_avail(0)

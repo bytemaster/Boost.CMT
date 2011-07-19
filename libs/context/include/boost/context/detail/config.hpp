@@ -20,6 +20,7 @@
 # define BOOST_CONTEXT_DECL
 #endif
 
+/** This does not work with local boost context... ignoring it
 #if ! defined(BOOST_CONTEXT_SOURCE) && !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_CONTEXT_NO_LIB)
 # define BOOST_LIB_NAME boost_context
 # if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_CONTEXT_DYN_LINK)
@@ -27,5 +28,6 @@
 # endif
 # include <boost/config/auto_link.hpp>
 #endif
+*/
 
 #endif // BOOST_CONTEXTS_DETAIL_CONFIG_H

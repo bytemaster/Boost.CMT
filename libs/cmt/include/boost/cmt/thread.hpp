@@ -92,6 +92,9 @@ namespace boost { namespace cmt {
    }
    void async( const boost::function<void()>& t, priority prio=priority() ); 
    int  exec();
+   inline void usleep( uint64_t us ) {
+        boost::cmt::thread::current().usleep(us);
+   }
 
    void yield();
 } } // boost::cmt

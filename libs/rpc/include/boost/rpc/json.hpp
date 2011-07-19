@@ -101,20 +101,25 @@ namespace boost { namespace rpc { namespace json {
             void end( const T&, const char* ){}
             template<typename T>
             void not_found( const T&, uint32_t ){}
-
-            // special support for optional is required to avoid adding they key/value if it is not set.
-            template<typename Class, typename T, typename Flags>
-            void accept_member( const Class& c, boost::optional<T> (Class::*p), const char* name, Flags key ) {
-                 if( !!(c.*p) ) {
-                     obj.push_back( js::Pair(name,js::Value()) );
-                     boost::rpc::json::pack( obj.back().value_, c.*p );
-                 }
-            }
-
+	    /**
+		VC++ does not understand the difference of return types, so an extra layer is
+		needed.
+	    */
+	    template<typename T>
+	    void pack_helper( const T& v, const char* name ) {
+                 obj.push_back( js::Pair(name,js::Value()) );
+                 boost::rpc::json::pack( obj.back().value_, v );
+	    }
+	    template<typename T>
+	    void pack_helper( const boost::optional<T>& v ) {
+	    	if( !!v ) {
+                   obj.push_back( js::Pair(name,js::Value()) );
+                   boost::rpc::json::pack( obj.back().value_, *v );
+		}
+	    }
             template<typename Class, typename T, typename Flags>
             void accept_member( const Class& c, T (Class::*p), const char* name, Flags key ) {
-                 obj.push_back( js::Pair(name,js::Value()) );
-                 boost::rpc::json::pack( obj.back().value_, c.*p );
+	    	pack_helper( c.*p, name );
             }
 
             js::Object& obj;
@@ -212,18 +217,18 @@ namespace boost { namespace rpc { namespace json {
     inline void pack( js::Value& jsv, const char* v )         { jsv = js::Value(std::string(v)); }
     
     inline void unpack( const js::Value& jsv, bool& v )         { v = jsv.get_bool();           }
-    inline void unpack( const js::Value& jsv, float& v )        { v = jsv.get_real();           }
+    inline void unpack( const js::Value& jsv, float& v )        { v = (float)jsv.get_real();    }
     inline void unpack( const js::Value& jsv, double& v )       { v = jsv.get_real();           }
     inline void unpack( const js::Value& jsv, uint8_t& v )      { v = jsv.get_int();            }
     inline void unpack( const js::Value& jsv, uint16_t& v )     { v = jsv.get_int();            }
-    inline void unpack( const js::Value& jsv, uint32_t& v )     { v = jsv.get_int64();          }
+    inline void unpack( const js::Value& jsv, uint32_t& v )     { v = (uint32_t)jsv.get_int64();}
     inline void unpack( const js::Value& jsv, uint64_t& v )     { v = jsv.get_uint64();         }
     inline void unpack( const js::Value& jsv, int8_t& v )       { v = jsv.get_int();            }
     inline void unpack( const js::Value& jsv, int16_t& v )      { v = jsv.get_int();            }
     inline void unpack( const js::Value& jsv, int32_t& v )      { v = jsv.get_int();            }
     inline void unpack( const js::Value& jsv, int64_t& v )      { v = jsv.get_int64();          }
-    inline void unpack( const js::Value& jsv, signed_int& v )   { v.value = jsv.get_int64();    }
-    inline void unpack( const js::Value& jsv, unsigned_int& v ) { v.value = jsv.get_uint64();   }
+    inline void unpack( const js::Value& jsv, signed_int& v )   { v.value = (int32_t)jsv.get_int64();    }
+    inline void unpack( const js::Value& jsv, unsigned_int& v ) { v.value = (uint32_t)jsv.get_uint64();   }
     inline void unpack( const js::Value& jsv, std::string& v )  { v = jsv.get_str();            }
 
     template<typename T> 

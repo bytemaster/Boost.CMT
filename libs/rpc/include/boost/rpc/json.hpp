@@ -175,7 +175,8 @@ namespace boost { namespace rpc { namespace json {
             }
             template<typename T> 
             inline static void unpack( const js::Value& jsv, T& v ) {
-                unpack_sequence unpack_vector(jsv.get_array().begin());
+                js::Array::const_iterator itr = jsv.get_array().begin();
+                unpack_sequence unpack_vector(itr);
                 boost::fusion::for_each( v, unpack_vector );
             }
         };
@@ -242,6 +243,11 @@ namespace boost { namespace rpc { namespace json {
     }
     template<typename T>
     inline void unpack( const js::Value& jsv, required<T>& v ) {
+        v = T();
+        boost::rpc::json::unpack( jsv, *v );
+    }
+    template<typename T>
+    inline void unpack( const js::Value& jsv, optional<T>& v ) {
         v = T();
         boost::rpc::json::unpack( jsv, *v );
     }
@@ -364,14 +370,15 @@ namespace boost { namespace rpc { namespace json {
     }
 
     template<typename T>
-    std::ostream& to_json( std::ostream& os, const T& v, uint32_t options = 0 ) {
+    std::ostream& to_json( std::ostream& os, const T& v, uint32_t options = json_spirit::remove_trailing_zeros ) {
         js::Value jsv; 
         pack( jsv, v );
         json_spirit::write( jsv, os, options );
         return os;
     }
     template<typename T>
-    std::ostream& to_jsonf( std::ostream& os, const T& v, uint32_t options = js::pretty_print ) {
+    std::ostream& to_jsonf( std::ostream& os, const T& v, 
+                            uint32_t options = js::pretty_print | json_spirit::remove_trailing_zeros  ) {
         return to_json(os,v,options);
     }
     template<typename T>

@@ -10,6 +10,8 @@ SET( libraries
 
 add_executable( rpcs  rpc_server.cpp  )
 target_link_libraries( rpcs ${libraries} )
+add_executable( rpcc  rpc_client.cpp  )
+target_link_libraries( rpcc ${libraries} )
 
 add_executable( jsonc  json_client.cpp  )
 target_link_libraries( jsonc ${libraries} )

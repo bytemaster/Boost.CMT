@@ -1,6 +1,7 @@
 #ifndef _BOOST_RPC_JSON_SERVER_HPP_
 #define _BOOST_RPC_JSON_SERVER_HPP_
 #include <boost/rpc/json/connection.hpp>
+#include <boost/exception/all.hpp>
 
 namespace boost { namespace rpc { namespace json {
 
@@ -36,7 +37,9 @@ namespace boost { namespace rpc { namespace json {
     } // namespace detail
 
     template<typename InterfaceType>
-    class server : public boost::reflect::any<InterfaceType>, public detail::server_base {
+    class server : public boost::reflect::any<InterfaceType>, 
+                   public boost::reflect::visitor<server<InterfaceType> >, 
+                   public detail::server_base {
         public:
             template<typename T>
             server( T v )

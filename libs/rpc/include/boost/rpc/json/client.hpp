@@ -21,14 +21,16 @@ namespace boost { namespace rpc { namespace json {
         template<typename Seq,typename ResultType=void>
         struct rpc_functor {
             rpc_functor( client_base& c, const char* name )
-            :m_client(c),m_msg(js::Object()),m_obj(m_msg.get_obj())
+            :m_client(c),m_msg(js::Object())
             {
+                 js::Object&  m_obj = m_msg.get_obj(); // obj stored in m_msg
                  m_obj.push_back( js::Pair( "id", 0 ) );
                  m_obj.push_back( js::Pair( "method", std::string(name) ) );
                  m_obj.push_back( js::Pair( "params", js::Array() ) );
             }
 
             ResultType operator()( const Seq& params ) {
+                 js::Object&  m_obj = m_msg.get_obj(); // obj stored in m_msg
                  pack( m_obj.back().value_, params );
                  js::Value  rtn_msg;
                  m_client.invoke( m_msg, rtn_msg );
@@ -42,11 +44,10 @@ namespace boost { namespace rpc { namespace json {
                     unpack( rtn_msg["error"], e );
                     BOOST_THROW_EXCEPTION( e );
                  }
-                 BOOST_THROW_EXCEPTION( "invalid json RPC message" );
+                // BOOST_THROW_EXCEPTION( "invalid json RPC message" );
             }
             client_base& m_client;
             js::Value    m_msg;
-            js::Object&  m_obj; // obj stored in m_msg
         }; // rpc_functor
 
     }  // namespace detail 
@@ -64,8 +65,7 @@ namespace boost { namespace rpc { namespace json {
            }
            template<typename InterfaceName, typename M>
            bool accept( M& m, const char* name ) {
-                m.m_delegate = detail::rpc_functor<typename M::fused_params, typename M::result_type>(*this,name);
-                return true;
+                return m.m_delegate = detail::rpc_functor<typename M::fused_params, typename M::result_type>(*this,name);
            }
     };
 

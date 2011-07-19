@@ -2,6 +2,8 @@
 #include "calculator.hpp"
 #include <boost/lexical_cast.hpp>
 #include <boost/cmt/thread.hpp>
+#include <boost/rpc/json/server.hpp>
+#include <boost/rpc/json/tcp/server.hpp>
 
 class CalculatorServer
 {
@@ -31,11 +33,11 @@ int main2( int argc, char** argv ) {
     using namespace boost;
     try {
 
-        /*
         boost::shared_ptr<CalculatorServer> calc(new CalculatorServer());
-        reflect::rpc_server<Calculator> server( calc );
-        server.listen( lexical_cast<uint16_t>(argv[1]) );
-        */
+        boost::rpc::json::server<Calculator> calcs(calc);
+        boost::rpc::json::tcp::listen( atoi(argv[1]), boost::bind(&boost::rpc::json::server<Calculator>::add_connection, &calcs, _1) );
+
+        boost::cmt::usleep(1000000ll*60*60);
     } catch ( const boost::exception& e )
     {
         std::cerr << boost::diagnostic_information(e) << std::endl;

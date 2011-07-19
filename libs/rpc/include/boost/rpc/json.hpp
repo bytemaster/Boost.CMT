@@ -7,7 +7,7 @@
 #include <boost/rpc/varint.hpp>
 #include <boost/rpc/required.hpp>
 #include <boost/rpc/errors.hpp>
-#include <boost/rpc/log/log.hpp>
+#include <boost/cmt/log/log.hpp>
 #include <boost/rpc/base64.hpp>
 #include <sstream>
 #include <iostream>

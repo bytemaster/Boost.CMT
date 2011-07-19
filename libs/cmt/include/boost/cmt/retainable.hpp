@@ -138,6 +138,7 @@ class retainable_ptr
         inline T * get() const { return cnt; }
 
     private:
+        template<typename U> friend class retainable_ptr;
         T* cnt;
 };
 template<typename T>

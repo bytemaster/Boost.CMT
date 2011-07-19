@@ -23,10 +23,10 @@ namespace boost { namespace cmt { namespace asio {
         }
     }
     boost::asio::io_service& default_io_service() {
-        static boost::asio::io_service       io;
-        static boost::asio::io_service::work the_work(io);
-        static boost::thread                 io_t(boost::bind(&boost::asio::io_service::run, &io));
-        return io;
+        static boost::asio::io_service*      io = new boost::asio::io_service();
+        static boost::asio::io_service::work the_work(*io);
+        static boost::thread                 io_t(boost::bind(&boost::asio::io_service::run, io));
+        return *io;
     }
 
     namespace tcp {

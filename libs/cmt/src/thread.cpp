@@ -138,8 +138,12 @@ namespace boost { namespace cmt {
     }
 
     thread& thread::current() {
+#ifdef _MSC_VER
+		static __declspec(thread) thread* t = NULL;
+#else
         static __thread thread* t = NULL;
-        if( !t ) t = new thread();
+#endif
+		if( !t ) t = new thread();
         return *t;
     }
 

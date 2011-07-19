@@ -3,7 +3,13 @@
 #include <boost/format.hpp>
 #include <iostream>
 
+#ifndef __func__
+#define __func__ __FUNCTION__
+#endif
+
+#ifndef WIN32
 #define  COLOR_CONSOLE 1
+#endif
 #include <boost/cmt/log/console_defines.h>
 
 namespace boost { namespace cmt { namespace detail {

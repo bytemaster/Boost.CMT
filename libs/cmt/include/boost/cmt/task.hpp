@@ -64,7 +64,7 @@ namespace boost { namespace cmt {
     template<>
     class rtask<void> : public task {
         public:
-            rtask( const boost::function<void()>& f, const typename promise<void>::ptr& p, priority prio=priority(), const char* name = "" )
+            rtask( const boost::function<void()>& f, const  promise<void>::ptr& p, priority prio=priority(), const char* name = "" )
             :task(prio),m_functor(f),m_prom(p),m_name(name){}
 
             void cancel() {
@@ -86,7 +86,7 @@ namespace boost { namespace cmt {
 
             const char*                 m_name;
             boost::function<void()>     m_functor;
-            typename promise<void>::ptr m_prom;
+            promise<void>::ptr m_prom;
     };
 
     template<typename R = void_t>
@@ -117,7 +117,7 @@ namespace boost { namespace cmt {
     };
     template<>
     class reftask<void> : public task {
-            reftask( const boost::function<void()>& f, const typename promise<void>::ptr& p, priority prio=priority(),const char* name = "" )
+            reftask( const boost::function<void()>& f, const  promise<void>::ptr& p, priority prio=priority(),const char* name = "" )
             :task(prio),m_functor(f),m_prom(p),m_name(name){}
 
             void cancel() {
@@ -139,7 +139,7 @@ namespace boost { namespace cmt {
 
             const char*                    m_name;
             const boost::function<void()>& m_functor;
-            typename promise<void>::ptr    m_prom;
+            promise<void>::ptr    m_prom;
     };
 
 

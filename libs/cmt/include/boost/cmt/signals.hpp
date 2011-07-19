@@ -12,7 +12,7 @@ namespace boost { namespace cmt {
    }
 
    void wait( boost::signal<void()>& sig, uint64_t timeout_us=-1 ) {
-       typename promise<void_t>::ptr p(new promise<void_t>());
+       promise<void_t>::ptr p(new promise<void_t>());
        boost::signals::scoped_connection c = sig.connect( boost::bind(&promise<void_t>::set_value,p,void_t()) );
        p->wait( timeout_us ); 
    }

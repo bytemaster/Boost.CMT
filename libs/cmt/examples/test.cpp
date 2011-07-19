@@ -28,6 +28,7 @@ void_t delay()
     boost::cmt::thread::current().usleep(3000000);
     slog( "test_signal");
     test_signal("hello world!");
+	return void_t();
 }
 int hello2(int cnt) {
     slog( "%1%", cnt );    

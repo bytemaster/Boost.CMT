@@ -70,7 +70,7 @@ namespace boost { namespace cmt { namespace asio {
 
     namespace tcp {
         typedef boost::asio::ip::tcp::endpoint endpoint;
-        typedef boost::asio::ip::tcp::resolver_iterator resolver_iterator;
+        typedef boost::asio::ip::tcp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::tcp::resolver resolver;
         std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
 
@@ -92,7 +92,7 @@ namespace boost { namespace cmt { namespace asio {
     }
     namespace udp {
         typedef boost::asio::ip::udp::endpoint endpoint;
-        typedef boost::asio::ip::udp::resolver_iterator resolver_iterator;
+        typedef boost::asio::ip::udp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::udp::resolver resolver;
         std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
     }

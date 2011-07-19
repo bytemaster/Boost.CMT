@@ -44,7 +44,9 @@ namespace boost { namespace rpc { namespace json {
                     unpack( rtn_msg["error"], e );
                     BOOST_THROW_EXCEPTION( e );
                  }
-                // BOOST_THROW_EXCEPTION( "invalid json RPC message" );
+	         error_object e;
+		 e.message = "invalid json RPC message, missing result or error";
+	         BOOST_THROW_EXCEPTION( e );
             }
             client_base& m_client;
             js::Value    m_msg;

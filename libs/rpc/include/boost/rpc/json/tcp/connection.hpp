@@ -4,7 +4,7 @@
 #include <boost/cmt/thread.hpp>
 #include <boost/rpc/json/connection.hpp>
 #include <boost/cmt/asio/tcp/socket.hpp>
-#include <boost/cmt/asio/tcp.hpp>
+#include <boost/cmt/asio.hpp>
 
 namespace boost { namespace rpc { namespace json { namespace tcp {
 

@@ -275,11 +275,11 @@ namespace boost { namespace cmt {
                 boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
                 if( !(next = my->dequeue())) {
                     if( timeout_time == -1 ) {
-                        slog( "wait..." );
+                        /*slog( "wait..." );*/
                         my->task_ready.wait( lock );
                     } else {
-                        slog( "timeout_time %1%   to_ptime %2%", timeout_time, 
-                            (to_ptime(timeout_time)-boost::get_system_time()).total_microseconds() );
+                        /*slog( "timeout_time %1%   to_ptime %2%", timeout_time, 
+                            (to_ptime(timeout_time)-boost::get_system_time()).total_microseconds() );*/
                         my->task_ready.timed_wait( lock, to_ptime(timeout_time) );
                     }
                     continue;

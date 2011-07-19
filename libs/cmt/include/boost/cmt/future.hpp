@@ -88,19 +88,19 @@ namespace boost { namespace cmt {
             }
 
             mutable mutex           m_mutex;
-  //          mutable boost::mutex    m_mutex;
             boost::exception_ptr    m_error;
             boost::optional<T>      m_value;
     };
 
     template<>
-    class promise<void> : public promise<void_t> {
-    };
+    class promise<void> : public promise<void_t> {};
 
     template<typename T = void_t>
     class future {
         public:
-            future( const typename promise<T>::ptr& p =  typename promise<T>::ptr() )
+	    typedef typename promise<T>::ptr promise_ptr;
+
+            future( const promise_ptr& p = promise_ptr() )
             :m_prom(p){}
 
             bool     valid()const                { return !!m_prom;              }
@@ -115,7 +115,7 @@ namespace boost { namespace cmt {
             }
 
         private:
-            typename promise<T>::ptr m_prom;
+            promise_ptr m_prom;
     };
 
     template<>

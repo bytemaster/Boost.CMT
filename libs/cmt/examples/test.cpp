@@ -36,6 +36,7 @@ int hello2(int cnt) {
 }
 
 int hello(int cnt) {
+    return cnt;
     slog( "%1%", cnt );    
     boost::cmt::async<int>( boost::bind(hello2,cnt+10) );
     boost::cmt::async<int>( boost::bind(hello2,cnt+1000) );
@@ -59,8 +60,8 @@ void main2() {
 
 void bench() {
   //  async<void_t>(delay).wait();
-    //uint64_t cnt = 1000000;
-    uint64_t cnt = 10;
+    uint64_t cnt = 1000000;
+    //uint64_t cnt = 10;
     wlog( "done waiting on delay" );
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     std::string hellostr("hello");

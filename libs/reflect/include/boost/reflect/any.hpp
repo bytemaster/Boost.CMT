@@ -40,9 +40,23 @@ namespace boost { namespace reflect {
            :m_self(self){}
 
            template<typename InterfaceName, typename M>
-           bool accept( M& m, const char* name )
-           {
+           bool accept( M& m, const char* name ) {
                 m.set_delegate( m_self, M::template get_member_on_type<T>() );
+                return true;
+           }
+       private:
+           T* m_self;
+    };
+    template<typename T>
+    class set_forward_delegate_visitor : public boost::reflect::visitor<set_forward_delegate_visitor<T> >
+    {
+        public:
+           set_forward_delegate_visitor( T* self = 0)
+           :m_self(self){}
+
+           template<typename InterfaceName, typename M>
+           bool accept( M& m, const char* name ) {
+                m.get_member_on_type( m_self, m.m_delegate );
                 return true;
            }
        private:
@@ -82,6 +96,9 @@ class any<NAME,InterfaceDelegate> :BOOST_PP_SEQ_FOR_EACH( PUBLIC_BASE, Interface
     public: \
         typedef NAME reflect_definition_class; \
         any(){} \
+        any( const any& c ) { \
+            *this = c; \
+        }\
         template<typename T> \
         any( T* v )  \
         :boost::any(v) \

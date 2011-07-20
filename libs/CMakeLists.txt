@@ -1,4 +1,0 @@
-ADD_SUBDIRECTORY( cmt )
-ADD_SUBDIRECTORY( json_spirit )
-ADD_SUBDIRECTORY( rpc )
-ADD_SUBDIRECTORY( context )

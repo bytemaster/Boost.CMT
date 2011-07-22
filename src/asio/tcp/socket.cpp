@@ -96,7 +96,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
                     boost::asio::buffer( buf, size ),
                     boost::asio::buffer( read_buf )
                 };
-                size_t r2 =  boost::asio::read( *((boost::asio::ip::tcp::socket*)this), bufs );
+                boost::asio::read( *((boost::asio::ip::tcp::socket*)this), bufs );
                 return r + size;
                     
             }

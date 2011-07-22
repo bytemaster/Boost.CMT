@@ -56,9 +56,9 @@ namespace boost { namespace cmt {
             }
             const char* name() { return m_name; }
 
-            const char*                 m_name;
             boost::function<R()>        m_functor;
             typename promise<R>::ptr    m_prom;
+            const char*                 m_name;
     };
 
     template<>
@@ -83,10 +83,11 @@ namespace boost { namespace cmt {
                 }
             }
             const char* name() { return m_name; }
-
-            const char*                 m_name;
+        
             boost::function<void()>     m_functor;
-            promise<void>::ptr m_prom;
+            promise<void>::             ptr m_prom;
+            const char*                 m_name;
+
     };
 
     template<typename R = void_t>
@@ -137,9 +138,9 @@ namespace boost { namespace cmt {
             }
             const char* name() { return m_name; }
 
-            const char*                    m_name;
             const boost::function<void()>& m_functor;
-            promise<void>::ptr    m_prom;
+            promise<void>::ptr              m_prom;
+            const char*                    m_name;
     };
 
 

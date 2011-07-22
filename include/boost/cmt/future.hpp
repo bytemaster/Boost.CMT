@@ -26,8 +26,9 @@ namespace boost { namespace cmt {
          private:
              friend class thread;
              friend class thread_private;
-             uint64_t                  m_timeout;
+
              abstract_thread*          m_blocked_thread;
+             uint64_t                  m_timeout;    
     };
 
     struct void_t {};

@@ -138,13 +138,21 @@ namespace boost { namespace cmt {
     }
 
     thread& thread::current() {
-#ifdef _MSC_VER
-		static __declspec(thread) thread* t = NULL;
+// Apple does not support __thread by default, but some custom gcc builds
+// for Mac OS X support it.  Backup use boost::thread_specific_ptr
+#ifdef __APPLE__ && (__GNUC__ < 4 && __GNUC_MINOR__ < 4)
+    static boost::thread_specific_ptr<thread>  t;
+    if( !t.get() ) t.reset( new thread() );
+        return *t.get();
 #else
-        static __thread thread* t = NULL;
+    #ifdef _MSC_VER
+       static __declspec(thread) thread* t = NULL;
+    #else
+       static __thread thread* t = NULL;
+    #endif
+       if( !t ) t = new thread();
+       return *t;
 #endif
-		if( !t ) t = new thread();
-        return *t;
     }
 
     void start_thread( const promise<thread*>::ptr p  )

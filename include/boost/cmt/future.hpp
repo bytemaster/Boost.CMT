@@ -96,6 +96,28 @@ namespace boost { namespace cmt {
     template<>
     class promise<void> : public promise<void_t> {};
 
+    /**
+     * @brief placeholder for the result of an asynchronous operation.
+     *  
+     * A future is constructed with a promise that is created when a new asynchronous 
+     * task is started.  A future behaves like a shared pointer where all copies
+     * reffer to the same promise. 
+     *
+     * When future::wait() is called, the future will block the current task until one
+     * of three conditions are met:
+     *  - timeout
+     *  - a value is set
+     *  - an exception is set
+     *
+     * If the asynchronous operation threw an exception it will be rethrown from the
+     * call to wait().
+     *
+     * @section future_auto_convert Automatic waiting on cast.
+     *
+     * boost::cmt::future<T> automatically casts to type T when requested.  This cast
+     * is short hand for boost::cmt::future<T>::wait().
+     *  
+     */
     template<typename T = void_t>
     class future {
         public:

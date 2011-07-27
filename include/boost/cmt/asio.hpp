@@ -1,3 +1,7 @@
+/**
+ *  @file boost/cmt/asio.hpp
+ *  @brief defines wrappers for boost::asio functions
+ */
 #ifndef _BOOST_CMT_ASIO_HPP_
 #define _BOOST_CMT_ASIO_HPP_
 #include <boost/asio.hpp>
@@ -38,15 +42,26 @@ namespace boost { namespace cmt { namespace asio {
             }
         }
     }
-
+    /**
+     * @return the default boost::asio::io_service for use with boost::cmt::asio
+     * 
+     * This IO service is automatically running in its own thread to service asynchronous
+     * requests without blocking any other threads.
+     */
     boost::asio::io_service& default_io_service();
 
+    /** @brief wraps boost::asio::async_read
+     *  @return the number of bytes read.
+     */
     template<typename AsyncReadStream, typename MutableBufferSequence>
     size_t read( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
         promise<size_t>::ptr p(new promise<size_t>());
         boost::asio::async_read( s, buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
     }
+    /** @brief wraps boost::asio::async_read_some
+     *  @return the number of bytes read.
+     */
     template<typename AsyncReadStream, typename MutableBufferSequence>
     size_t read_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
         promise<size_t>::ptr p(new promise<size_t>());
@@ -54,6 +69,9 @@ namespace boost { namespace cmt { namespace asio {
         return p->wait(timeout_us);
     }
 
+    /** @brief wraps boost::asio::async_write
+     *  @return the number of bytes written
+     */
     template<typename AsyncReadStream, typename MutableBufferSequence>
     size_t write( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
         promise<size_t>::ptr p(new promise<size_t>());
@@ -61,6 +79,9 @@ namespace boost { namespace cmt { namespace asio {
         return p->wait(timeout_us);
     }
 
+    /** @brief wraps boost::asio::async_write_some
+     *  @return the number of bytes written
+     */
     template<typename AsyncReadStream, typename MutableBufferSequence>
     size_t write_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
         promise<size_t>::ptr p(new promise<size_t>());
@@ -72,8 +93,10 @@ namespace boost { namespace cmt { namespace asio {
         typedef boost::asio::ip::tcp::endpoint endpoint;
         typedef boost::asio::ip::tcp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::tcp::resolver resolver;
+        /// @brief asynchronously resolve all tcp::endpoints for hostname:port
         std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
 
+        /// @brief wraps boost::asio::async_accept
         template<typename SocketType, typename AcceptorType>
         boost::system::error_code accept( AcceptorType& acc, SocketType& sock, uint64_t timeout_us = -1 ) {
             promise<boost::system::error_code>::ptr p( new promise<boost::system::error_code>() );
@@ -81,6 +104,7 @@ namespace boost { namespace cmt { namespace asio {
             return p->wait( timeout_us );
         }
 
+        /// @brief wraps boost::asio::socket::async_connect
         template<typename AsyncSocket, typename EndpointType>
         boost::system::error_code connect( AsyncSocket& sock, const EndpointType& ep, uint64_t timeout_us = -1 ) {
             promise<boost::system::error_code>::ptr p(new promise<boost::system::error_code>());
@@ -94,6 +118,7 @@ namespace boost { namespace cmt { namespace asio {
         typedef boost::asio::ip::udp::endpoint endpoint;
         typedef boost::asio::ip::udp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::udp::resolver resolver;
+        /// @brief asynchronously resolve all udp::endpoints for hostname:port
         std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
     }
 

@@ -17,6 +17,9 @@ namespace boost { namespace cmt {
    };
    priority current_priority();
 
+   /**
+    * @brief manages cooperative scheduling of tasks within a single operating system thread.
+    */
    class thread : public abstract_thread {
         public:
             static thread& current();
@@ -92,6 +95,10 @@ namespace boost { namespace cmt {
    }
    void async( const boost::function<void()>& t, priority prio=priority() ); 
    int  exec();
+
+   /**
+    *   Sleeps the current stack for @param us microseconds.
+    */
    inline void usleep( uint64_t us ) {
         boost::cmt::thread::current().usleep(us);
    }

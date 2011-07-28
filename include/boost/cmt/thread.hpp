@@ -62,6 +62,7 @@ namespace boost { namespace cmt {
             void exec();
 
             priority current_priority()const;
+            ~thread();
         protected:
             void wait( const promise_base::ptr& p, uint64_t timeout_us );
             void notify( const promise_base::ptr& p );
@@ -69,7 +70,6 @@ namespace boost { namespace cmt {
 
         private:
             thread();
-            ~thread();
 
             friend class promise_base;
             void async( const task::ptr& t );

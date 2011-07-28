@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Boost.CMT - Cooperative Multi-Tasking: Main Page</title>
+<title>Boost.CMT - Cooperative Multi-Tasking: boost::cmt::stack_retainable&lt; T &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javaScript" src="search/search.js"></script>
@@ -17,9 +17,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="navigation" id="top">
   <div class="tabs">
     <ul>
-      <li class="current"><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+      <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
       <li><a href="modules.html"><span>Modules</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -36,26 +36,38 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div class="tabs">
+    <ul>
+      <li><a href="annotated.html"><span>Class&nbsp;List</span></a></li>
+      <li><a href="classes.html"><span>Class&nbsp;Index</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&nbsp;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
+    </ul>
+  </div>
+  <div class="navpath"><b>boost</b>::<b>cmt</b>::<a class="el" href="classboost_1_1cmt_1_1stack__retainable.html">stack_retainable</a>
+  </div>
 </div>
 <div class="contents">
-<h1>Boost.CMT - Cooperative Multi-Tasking Documentation</h1><p>Boost.CMT simplifies the development of asynchronous, multi-threaded applications by providing a cooperative multi-tasking system and simplified inter-thread communication.</p>
-<h2><a class="anchor" id="boost_cmt_toc">
-Table of Contents</a></h2>
-<ul>
-<li><a class="el" href="group__boost__cmt__motivation.html">Motivation</a><ul>
-<li><a class="el" href="group__boost__cmt__motivation.html#boost_cmt_multi_task_vs_multi_thread">Multitasking versus Multithreading</a></li>
-<li><a class="el" href="group__boost__cmt__motivation.html#boost_cmt_cooperative_threading_vs_qt_eventloop">Cooperative Threading vs Qt-like Event Loops</a></li>
-</ul>
-</li>
-<li><a class="el" href="group__boost__cmt__dependencies.html">Dependencies</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html">Quick Start</a><ul>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_async_same_thread">Asynchronous Calls in Current Thread</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_async_signal_wait">Asynchronously wait on a Signal</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_interthread">Inter-thread Invocations</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_usleep">Yielding and Sleeping</a></li>
-<li><a class="el" href="group__boost__cmt__asio.html">Boost.CMT ASIO</a> </li>
-</ul>
-</li>
+<h1>boost::cmt::stack_retainable&lt; T &gt; Class Template Reference</h1><!-- doxytag: class="boost::cmt::stack_retainable" -->
+<p><code>#include &lt;<a class="el" href="retainable_8hpp_source.html">retainable.hpp</a>&gt;</code></p>
+
+<p><a href="classboost_1_1cmt_1_1stack__retainable-members.html">List of all members.</a></p>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr><td colspan="2"><h2>Public Member Functions</h2></td></tr>
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="a3ccf8bf46965c5feb648d4a0cb48871c"></a><!-- doxytag: member="boost::cmt::stack_retainable::stack_retainable" ref="a3ccf8bf46965c5feb648d4a0cb48871c" args="(const A &amp;a, const B &amp;b, const C &amp;c)" -->
+template&lt;typename A , typename B , typename C &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>stack_retainable</b> (const A &amp;a, const B &amp;b, const C &amp;c)</td></tr>
+<tr><td class="memTemplParams" colspan="2"><a class="anchor" id="ae66a3a93d58e261b57c06da5993a82da"></a><!-- doxytag: member="boost::cmt::stack_retainable::stack_retainable" ref="ae66a3a93d58e261b57c06da5993a82da" args="(const A &amp;a, const B &amp;b, const C &amp;c, const D &amp;d)" -->
+template&lt;typename A , typename B , typename C , typename D &gt; </td></tr>
+<tr><td class="memTemplItemLeft" align="right" valign="top">&nbsp;</td><td class="memTemplItemRight" valign="bottom"><b>stack_retainable</b> (const A &amp;a, const B &amp;b, const C &amp;c, const D &amp;d)</td></tr>
+</table>
+<hr/><a name="_details"></a><h2>Detailed Description</h2>
+<h3>template&lt;typename T&gt;<br/>
+ class boost::cmt::stack_retainable&lt; T &gt;</h3>
+
+<p>Allows an instance of retainable type T to be allocated on the stack and freed by normal means. </p>
+<hr/>The documentation for this class was generated from the following file:<ul>
+<li>/Users/dlarimer/dev/libs/cmt/include/boost/cmt/<a class="el" href="retainable_8hpp_source.html">retainable.hpp</a></li>
 </ul>
 </div>
 <!--- window showing the filter options -->

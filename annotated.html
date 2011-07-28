@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Boost.CMT - Cooperative Multi-Tasking: Main Page</title>
+<title>Boost.CMT - Cooperative Multi-Tasking: Class List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javaScript" src="search/search.js"></script>
@@ -17,9 +17,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="navigation" id="top">
   <div class="tabs">
     <ul>
-      <li class="current"><a href="index.html"><span>Main&nbsp;Page</span></a></li>
+      <li><a href="index.html"><span>Main&nbsp;Page</span></a></li>
       <li><a href="modules.html"><span>Modules</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -36,27 +36,28 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
+  <div class="tabs">
+    <ul>
+      <li class="current"><a href="annotated.html"><span>Class&nbsp;List</span></a></li>
+      <li><a href="classes.html"><span>Class&nbsp;Index</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&nbsp;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&nbsp;Members</span></a></li>
+    </ul>
+  </div>
 </div>
 <div class="contents">
-<h1>Boost.CMT - Cooperative Multi-Tasking Documentation</h1><p>Boost.CMT simplifies the development of asynchronous, multi-threaded applications by providing a cooperative multi-tasking system and simplified inter-thread communication.</p>
-<h2><a class="anchor" id="boost_cmt_toc">
-Table of Contents</a></h2>
-<ul>
-<li><a class="el" href="group__boost__cmt__motivation.html">Motivation</a><ul>
-<li><a class="el" href="group__boost__cmt__motivation.html#boost_cmt_multi_task_vs_multi_thread">Multitasking versus Multithreading</a></li>
-<li><a class="el" href="group__boost__cmt__motivation.html#boost_cmt_cooperative_threading_vs_qt_eventloop">Cooperative Threading vs Qt-like Event Loops</a></li>
-</ul>
-</li>
-<li><a class="el" href="group__boost__cmt__dependencies.html">Dependencies</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html">Quick Start</a><ul>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_async_same_thread">Asynchronous Calls in Current Thread</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_async_signal_wait">Asynchronously wait on a Signal</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_interthread">Inter-thread Invocations</a></li>
-<li><a class="el" href="group__boost__cmt__quickstart.html#boost_cmt_usleep">Yielding and Sleeping</a></li>
-<li><a class="el" href="group__boost__cmt__asio.html">Boost.CMT ASIO</a> </li>
-</ul>
-</li>
-</ul>
+<h1>Class List</h1>Here are the classes, structs, unions and interfaces with brief descriptions:<table>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1asio_1_1acceptor.html">boost::cmt::asio::acceptor</a></td><td class="indexvalue">Accepts new tcp sockets </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1asio_1_1basic__socket__iostream.html">boost::cmt::asio::basic_socket_iostream&lt; Protocol, StreamSocketService &gt;</a></td><td class="indexvalue">Iostream interface for a socket </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1asio_1_1basic__socket__streambuf.html">boost::cmt::asio::basic_socket_streambuf&lt; Protocol, StreamSocketService &gt;</a></td><td class="indexvalue">Iostream streambuf for a socket </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1future.html">boost::cmt::future&lt; T &gt;</a></td><td class="indexvalue">Placeholder for the result of an asynchronous operation </td></tr>
+  <tr><td class="indexkey"><a class="el" href="structboost_1_1cmt_1_1asio_1_1tcp_1_1socket_1_1iterator.html">boost::cmt::asio::tcp::socket::iterator</a></td><td class="indexvalue"></td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1mutex.html">boost::cmt::mutex</a></td><td class="indexvalue">A non-blocking mutex, modified spin-lock that yields on failure </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1retainable.html">boost::cmt::retainable</a></td><td class="indexvalue">Reference counted type </td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1asio_1_1tcp_1_1socket.html">boost::cmt::asio::tcp::socket</a></td><td class="indexvalue"></td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1stack__retainable.html">boost::cmt::stack_retainable&lt; T &gt;</a></td><td class="indexvalue"></td></tr>
+  <tr><td class="indexkey"><a class="el" href="classboost_1_1cmt_1_1thread.html">boost::cmt::thread</a></td><td class="indexvalue">Manages cooperative scheduling of tasks within a single operating system thread </td></tr>
+</table>
 </div>
 <!--- window showing the filter options -->
 <div id="MSearchSelectWindow"

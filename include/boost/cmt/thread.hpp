@@ -1,3 +1,6 @@
+/**
+ * @file boost/cmt/thread.hpp
+ */
 #ifndef BOOST_CMT_HPP
 #define BOOST_CMT_HPP
 #include <vector>

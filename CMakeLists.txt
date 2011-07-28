@@ -14,8 +14,10 @@ SET( sources
             src/asio/tcp/socket.cpp
              )
 
+
 SETUP_LIBRARY( boost_cmt SOURCES ${sources}
                              LIBRARIES 
                              LIBRARY_TYPE STATIC )
 
+install( DIRECTORY include/boost/cmt DESTINATION include/boost )
 add_subdirectory( examples )

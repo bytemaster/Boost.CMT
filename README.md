@@ -5,6 +5,21 @@ This library builds on top of Boost.Context to provide
 an effecient coopertive multitasking API with a focus 
 on ease of use and staying out of your way.
 
+
+Boost.CMT can be built by checking out my development repository: https://github.com/bytemaster/dev
+
+### Installation ## 
+
+    git clone https://github.com/bytemaster/dev
+    cd dev
+    git submodule init
+    git submodule update
+    cmake .
+    make
+    make install
+    @endcode
+
+
 ### Notice ###
 
     This library is not part of the official Boost C++ library, but
@@ -51,7 +66,7 @@ on ease of use and staying out of your way.
     }
 
     void wait_on_signal() {
-        std::string rtn = boost::cmt::wait<std::string>(test_signal);
+        std::string rtn = boost::cmt::wait(test_signal);
     }
 
     int main( int argc, char** argv ) {

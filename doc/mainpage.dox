@@ -9,6 +9,7 @@
     - @ref boost_cmt_motivation
         - @ref boost_cmt_multi_task_vs_multi_thread
         - @ref boost_cmt_cooperative_threading_vs_qt_eventloop
+    - @ref boost_cmt_dependencies
     - @ref boost_cmt_quickstart 
         - @ref boost_cmt_async_same_thread
         - @ref boost_cmt_async_signal_wait
@@ -19,6 +20,37 @@
 */
 
 /** @defgroup boost_cmt Boost.CMT
+*/
+
+/** @defgroup boost_cmt_dependencies Dependencies
+    @ingroup boost_cmt
+
+    Boost.CMT builds off of the following libraries:
+
+    - Boost.Context [ @link https://github.com/bytemaster/boost_context @endlink ]
+    - Boost.Move
+    - Boost.Atomic
+    - Boost.Thread
+    - Boost.Exception
+    - Boost.Optional
+    - Boost.TypeTraits
+    - Boost.Signals [optional]
+*/
+
+/** @defgroup boost_cmt_installation  Installation
+    @ingroup boost_cmt
+
+    Boost.CMT can be built by checking out my development repository: https://github.com/bytemaster/dev
+
+    @code
+    git clone https://github.com/bytemaster/dev
+    cd dev
+    git submodule init
+    git submodule update
+    cmake .
+    make
+    make install
+    @endcode
 */
 
 /**
@@ -72,7 +104,7 @@
     }
 
     void wait_on_signal() {
-        std::string rtn = boost::cmt::wait<std::string>(test_signal);
+        std::string rtn = boost::cmt::wait(test_signal);
     }
 
     int main( int argc, char** argv ) {
@@ -82,7 +114,7 @@
     }
     @endcode
 
-    @section boost_cmt_interthread Interthread Invocations
+    @section boost_cmt_interthread Inter-thread Invocations
 
     Sometimes you really want things to happen in parallel on multiple real CPU cores.  In this case you will need to
     have some kind of inter-thread synchronization.  Boost.CMT enables lock-free interthread communication by posting

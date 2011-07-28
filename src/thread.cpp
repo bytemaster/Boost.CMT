@@ -140,7 +140,8 @@ namespace boost { namespace cmt {
     thread& thread::current() {
 // Apple does not support __thread by default, but some custom gcc builds
 // for Mac OS X support it.  Backup use boost::thread_specific_ptr
-#ifdef __APPLE__ && (__GNUC__ < 4 && __GNUC_MINOR__ < 4)
+#if defined(__APPLE__) && (__GNUC__ <= 4 && __GNUC_MINOR__ < 4)
+    #warning using boost::thread_specific_ptr instead of __thread, use gcc 4.5 for better performance.
     static boost::thread_specific_ptr<thread>  t;
     if( !t.get() ) t.reset( new thread() );
         return *t.get();

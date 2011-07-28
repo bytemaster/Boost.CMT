@@ -14,19 +14,6 @@ SET( sources
             src/asio/tcp/socket.cpp
              )
 
-SET( headers 
-            include/boost/cmt/asio.hpp
-            include/boost/cmt/delegate.hpp
-            include/boost/cmt/error.hpp
-            include/boost/cmt/future.hpp
-            include/boost/cmt/mutex.hpp
-            include/boost/cmt/retainable.hpp
-            include/boost/cmt/signals.hpp
-            include/boost/cmt/task.hpp
-            include/boost/cmt/thread.hpp
-            include/boost/cmt/usclock.hpp
-            include/boost/cmt/detail/async_delegate_impl.hpp
-            )
 
 SETUP_LIBRARY( boost_cmt SOURCES ${sources}
                              LIBRARIES 

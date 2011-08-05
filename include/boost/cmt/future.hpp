@@ -121,10 +121,12 @@ namespace boost { namespace cmt {
     template<typename T = void_t>
     class future {
         public:
-	    typedef typename promise<T>::ptr promise_ptr;
+	        typedef typename promise<T>::ptr promise_ptr;
+            typedef T                        value_type;
 
             future( const promise_ptr& p = promise_ptr() )
             :m_prom(p){}
+            future( const T& v ):m_prom( new promise<T>(v) ){}
 
             bool     valid()const                { return !!m_prom;              }
             bool     ready()const                { return m_prom->ready();       }
@@ -146,6 +148,7 @@ namespace boost { namespace cmt {
         public:
             future( const  promise<void_t>::ptr& p =  promise<void_t>::ptr() )
             :future<void_t>(p){}
+            future( const void_t& v ):future<void_t>(v){}
     };
 
 

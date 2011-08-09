@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 
 namespace boost { namespace cmt { namespace asio { namespace tcp {
+    namespace detail { struct socket; }
 
     /**
      *  Provides a buffered socket based on boost::asio.  
@@ -41,18 +42,11 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
 
             size_t read_some( char* buffer, size_t size );
             size_t read( char* buffer, size_t size );
-            size_t try_read( char* buffer, size_t size );
             size_t write( const char* buffer, size_t size );
 
+            void flush();
         private:
-            void  write_loop( uint8_t write_buf_idx );
-            std::vector<char>  read_buf;
-            std::vector<char>  write_buf[2];
-            std::vector<char>* cur_write_buf;
-
-            uint8_t           cur_wbuf_idx;
-            size_t            read_pos;
-            size_t            last_avail;
+            detail::socket* my;
     };
 
 } } } } // namespace boost::cmt::asio::tcp

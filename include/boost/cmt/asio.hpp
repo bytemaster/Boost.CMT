@@ -100,7 +100,7 @@ namespace boost { namespace cmt { namespace asio {
         template<typename SocketType, typename AcceptorType>
         boost::system::error_code accept( AcceptorType& acc, SocketType& sock, uint64_t timeout_us = -1 ) {
             promise<boost::system::error_code>::ptr p( new promise<boost::system::error_code>() );
-            acc.async_accept( sock, boost::bind( detail::error_handler, p, _1 ) );
+            acc.async_accept( sock, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait( timeout_us );
         }
 
@@ -108,7 +108,7 @@ namespace boost { namespace cmt { namespace asio {
         template<typename AsyncSocket, typename EndpointType>
         boost::system::error_code connect( AsyncSocket& sock, const EndpointType& ep, uint64_t timeout_us = -1 ) {
             promise<boost::system::error_code>::ptr p(new promise<boost::system::error_code>());
-            sock.async_connect( ep, boost::bind( detail::error_handler, p, _1 ) );
+            sock.async_connect( ep, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait(timeout_us);
         }
 

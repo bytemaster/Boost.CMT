@@ -45,6 +45,7 @@ namespace boost { namespace cmt {
                 boost::unique_lock<mutex> lock( m_mutex );
                 return !!m_value || m_error; 
             }
+            bool error()const { return m_error; }
             operator const T&()const  { return wait();  }
 
             const T& wait(uint64_t timeout = -1) {
@@ -128,8 +129,9 @@ namespace boost { namespace cmt {
             :m_prom(p){}
             future( const T& v ):m_prom( new promise<T>(v) ){}
 
-            bool     valid()const                { return !!m_prom;              }
-            bool     ready()const                { return m_prom->ready();       }
+            bool valid()const { return !!m_prom;       }
+            bool ready()const { return m_prom->ready();}
+            bool error()const { return valid() ? m_prom->error() : false; }
             operator const T&()const { 
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait();

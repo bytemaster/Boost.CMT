@@ -5,20 +5,22 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/cmt/mutex.hpp>
 #include <boost/optional.hpp>
+#include <boost/chrono.hpp>
 
 namespace boost { namespace cmt {
+    using boost::chrono::microseconds;
 
     class abstract_thread;
     class promise_base :  public retainable {
          public:
              typedef retainable_ptr<promise_base> ptr;
-             promise_base():m_blocked_thread(0),m_timeout(-1){}
+             promise_base():m_blocked_thread(0),m_timeout(microseconds::max()){}
              virtual ~promise_base(){}
 
              virtual bool ready()const = 0;
          protected:
              void enqueue_thread();
-             void wait( uint64_t timeout_us );
+             void wait( const microseconds& timeout_us );
              void notify();
              virtual void set_timeout()=0;
              virtual void set_exception( const boost::exception_ptr& e )=0;
@@ -28,7 +30,7 @@ namespace boost { namespace cmt {
              friend class thread_private;
 
              abstract_thread*          m_blocked_thread;
-             uint64_t                  m_timeout;    
+             microseconds              m_timeout;    
     };
 
     struct void_t {};
@@ -48,7 +50,7 @@ namespace boost { namespace cmt {
             bool error()const { return m_error; }
             operator const T&()const  { return wait();  }
 
-            const T& wait(uint64_t timeout = -1) {
+            const T& wait(const microseconds& timeout = microseconds::max() ) {
                 { // lock while we check values
                     boost::unique_lock<mutex> lock( m_mutex );
                     if( m_error ) boost::rethrow_exception(m_error);
@@ -136,7 +138,7 @@ namespace boost { namespace cmt {
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait();
             }
-            const T& wait(uint64_t timeout = -1) { 
+            const T& wait(const microseconds& timeout = microseconds::max() ) { 
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait(timeout); 
             }

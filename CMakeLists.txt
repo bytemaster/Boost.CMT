@@ -5,7 +5,6 @@ include_directories( ../move/include )
 include_directories( ../atomic/include )
 
 SET( sources 
-            src/usclock.cpp
             src/future.cpp
             src/thread.cpp
             src/asio.cpp
@@ -15,8 +14,15 @@ SET( sources
              )
 
 
+SET( libraries 
+    boost_context 
+    ${Boost_THREAD_LIBRARY} 
+    ${Boost_ASIO_LIBRARY} 
+    ${Boost_SYSTEM_LIBRARY} 
+    ${Boost_CHRONO_LIBRARY} 
+    ${Boost_SIGNALS_LIBRARY})
 SETUP_LIBRARY( boost_cmt SOURCES ${sources}
-                             LIBRARIES 
+                             LIBRARIES  ${libraries}
                              LIBRARY_TYPE STATIC )
 
 install( DIRECTORY include/boost/cmt DESTINATION include/boost )

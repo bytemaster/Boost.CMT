@@ -30,7 +30,7 @@ namespace boost { namespace cmt { namespace asio {
     }
 
     namespace tcp {
-        std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, uint64_t timeout_us ) {
+        std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, const microseconds& timeout_us ) {
             resolver res( boost::cmt::asio::default_io_service() );
             promise<std::vector<endpoint> >::ptr p( new promise<std::vector<endpoint> >() );
             res.async_resolve( resolver::query(hostname,port), 
@@ -39,7 +39,7 @@ namespace boost { namespace cmt { namespace asio {
         }
     }
     namespace udp {
-        std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, uint64_t timeout_us  ) {
+        std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, const microseconds& timeout_us  ) {
             resolver res( boost::cmt::asio::default_io_service() );
             promise<std::vector<endpoint> >::ptr p( new promise<std::vector<endpoint> >() );
             res.async_resolve( resolver::query(hostname,port), 

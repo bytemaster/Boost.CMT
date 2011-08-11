@@ -1,9 +1,9 @@
+#include <boost/chrono.hpp>
 #include <boost/cmt/thread.hpp>
 #include <boost/context/all.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
-#include <boost/cmt/usclock.hpp>
 
 #include <boost/cmt/log/log.hpp>
 
@@ -11,6 +11,16 @@
 #include <vector>
 
 namespace boost { namespace cmt {
+    using boost::chrono::system_clock;
+
+    boost::system_time to_system_time( const system_clock::time_point& t ) {
+        typedef boost::chrono::microseconds duration_t;
+        typedef duration_t::rep rep_t;
+        rep_t d = boost::chrono::duration_cast<duration_t>(t.time_since_epoch()).count();
+        static boost::posix_time::ptime epoch(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+        return epoch + boost::posix_time::seconds(long(d/1000000)) + boost::posix_time::microseconds(long(d%1000000));
+    }
+
     namespace bc = boost::contexts;
     struct context_t : public bc::context< bc::protected_stack > {
         typedef context_t* ptr;
@@ -23,7 +33,7 @@ namespace boost { namespace cmt {
 
         priority                 prio;
         promise_base*            prom; 
-        uint64_t                 resume_time;
+        system_clock::time_point  resume_time;
         context_t*               next_blocked;
         context_t*               next;
     };
@@ -56,7 +66,7 @@ namespace boost { namespace cmt {
 
            context_t*                blocked;
 
-           uint64_t check_for_timeouts();
+           system_clock::time_point  check_for_timeouts();
 
            context_t::ptr ready_pop_front() {
                 context_t::ptr tmp = 0;
@@ -86,7 +96,7 @@ namespace boost { namespace cmt {
            }
            struct task_priority_less {
                bool operator()( const task::ptr& a, const task::ptr& b ) {
-                   return a->prio.value < b->prio.value ? true :  (a->prio.value > b->prio.value ? false : a->posted_us > b->posted_us );
+                   return a->prio.value < b->prio.value ? true :  (a->prio.value > b->prio.value ? false : a->posted_num > b->posted_num );
                }
            };
            void enqueue( const task::ptr& t ) {
@@ -114,11 +124,11 @@ namespace boost { namespace cmt {
            }
 
     };
-    uint64_t thread_private::check_for_timeouts() {
+    system_clock::time_point thread_private::check_for_timeouts() {
         if( !sleep_pqueue.size() ) 
-            return -1;
+            return system_clock::time_point::max();
 
-        uint64_t now = sys_clock();
+        boost::chrono::system_clock::time_point now = boost::chrono::system_clock::now();
         if( now < sleep_pqueue.front()->resume_time ) {
             return sleep_pqueue.front()->resume_time;
         }
@@ -134,7 +144,7 @@ namespace boost { namespace cmt {
                 BOOST_ASSERT(c->prom == NULL );
             }
         }
-        return 0;
+        return system_clock::time_point::min();
     }
 
     thread& thread::current() {
@@ -187,7 +197,7 @@ namespace boost { namespace cmt {
         BOOST_ASSERT( &current() == this );
         BOOST_ASSERT(my->current);
 
-        my->current->resume_time = sys_clock() + timeout_us;
+        my->current->resume_time = system_clock::now() + microseconds(timeout_us);
         my->current->prom = 0;
 
         my->sleep_pqueue.push_back(my->current);
@@ -198,19 +208,19 @@ namespace boost { namespace cmt {
         my->current = 0;
         prev->suspend();
         my->current = prev;
-        my->current->resume_time = -1;
+        my->current->resume_time = system_clock::time_point::max();
         my->current->prom = 0;
     }
 
-    void thread::wait( const promise_base::ptr& p, uint64_t timeout_us ) {
+    void thread::wait( const promise_base::ptr& p, const boost::chrono::microseconds& timeout_us ) {
         BOOST_ASSERT( &current() == this );
         BOOST_ASSERT(my->current);
 
         if( p->ready() )
             return;
 
-        if( timeout_us != -1 ) {
-            my->current->resume_time = sys_clock() + timeout_us;
+        if( timeout_us != microseconds::max() ) {
+            my->current->resume_time = system_clock::now() + timeout_us;
             my->current->prom = p.get();
             my->sleep_pqueue.push_back(my->current);
             std::push_heap( my->sleep_pqueue.begin(),
@@ -284,18 +294,16 @@ namespace boost { namespace cmt {
 
             task::ptr next = my->dequeue();
             if( !next ) {
-                uint64_t timeout_time = my->check_for_timeouts();
-                if( timeout_time == 0 )
+                system_clock::time_point timeout_time = my->check_for_timeouts();
+
+                if( timeout_time == system_clock::time_point::min() )
                     continue;
                 boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
                 if( !(next = my->dequeue())) {
-                    if( timeout_time == -1 ) {
-                        /*slog( "wait..." );*/
+                    if( timeout_time == system_clock::time_point::max() ) {
                         my->task_ready.wait( lock );
                     } else {
-                        /*slog( "timeout_time %1%   to_ptime %2%", timeout_time, 
-                            (to_ptime(timeout_time)-boost::get_system_time()).total_microseconds() );*/
-                        my->task_ready.timed_wait( lock, to_ptime(timeout_time) );
+                        my->task_ready.timed_wait( lock, to_system_time(timeout_time) );
                     }
                     continue;
                 }

@@ -23,7 +23,7 @@ namespace boost { namespace cmt {  namespace asio {
             }
           }
 
-          tcp_socket_ptr accept( uint64_t timeout_us = -1 ) { 
+          tcp_socket_ptr accept( const microseconds& timeout_us = microseconds::max() ) { 
              tcp_socket_ptr sock( new tcp_socket( boost::cmt::asio::default_io_service() ) );
              cmt::promise<boost::system::error_code>::ptr p(new cmt::promise<boost::system::error_code>());
              acc->async_accept( *sock, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );

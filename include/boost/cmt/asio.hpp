@@ -54,7 +54,7 @@ namespace boost { namespace cmt { namespace asio {
      *  @return the number of bytes read.
      */
     template<typename AsyncReadStream, typename MutableBufferSequence>
-    size_t read( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+    size_t read( AsyncReadStream& s, const MutableBufferSequence& buf, const microseconds& timeout_us = microseconds::max() ) {
         promise<size_t>::ptr p(new promise<size_t>());
         boost::asio::async_read( s, buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
@@ -63,7 +63,7 @@ namespace boost { namespace cmt { namespace asio {
      *  @return the number of bytes read.
      */
     template<typename AsyncReadStream, typename MutableBufferSequence>
-    size_t read_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+    size_t read_some( AsyncReadStream& s, const MutableBufferSequence& buf, const microseconds& timeout_us = microseconds::max() ) {
         promise<size_t>::ptr p(new promise<size_t>());
         s.async_read_some( buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
@@ -73,7 +73,7 @@ namespace boost { namespace cmt { namespace asio {
      *  @return the number of bytes written
      */
     template<typename AsyncReadStream, typename MutableBufferSequence>
-    size_t write( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+    size_t write( AsyncReadStream& s, const MutableBufferSequence& buf, const microseconds& timeout_us = microseconds::max() ) {
         promise<size_t>::ptr p(new promise<size_t>());
         boost::asio::async_write( s, buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
@@ -83,7 +83,7 @@ namespace boost { namespace cmt { namespace asio {
      *  @return the number of bytes written
      */
     template<typename AsyncReadStream, typename MutableBufferSequence>
-    size_t write_some( AsyncReadStream& s, const MutableBufferSequence& buf, uint64_t timeout_us = -1 ) {
+    size_t write_some( AsyncReadStream& s, const MutableBufferSequence& buf, const microseconds& timeout_us = microseconds::max() ) {
         promise<size_t>::ptr p(new promise<size_t>());
         s.async_write_some(  buf, boost::bind( detail::read_write_handler, p, _1, _2 ) );
         return p->wait(timeout_us);
@@ -94,11 +94,11 @@ namespace boost { namespace cmt { namespace asio {
         typedef boost::asio::ip::tcp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::tcp::resolver resolver;
         /// @brief asynchronously resolve all tcp::endpoints for hostname:port
-        std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
+        std::vector<endpoint> resolve( const std::string& hostname, const std::string& port, const microseconds& timeout_us = microseconds::max() );
 
         /// @brief wraps boost::asio::async_accept
         template<typename SocketType, typename AcceptorType>
-        boost::system::error_code accept( AcceptorType& acc, SocketType& sock, uint64_t timeout_us = -1 ) {
+        boost::system::error_code accept( AcceptorType& acc, SocketType& sock, const microseconds& timeout_us = microseconds::max() ) {
             promise<boost::system::error_code>::ptr p( new promise<boost::system::error_code>() );
             acc.async_accept( sock, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait( timeout_us );
@@ -106,7 +106,7 @@ namespace boost { namespace cmt { namespace asio {
 
         /// @brief wraps boost::asio::socket::async_connect
         template<typename AsyncSocket, typename EndpointType>
-        boost::system::error_code connect( AsyncSocket& sock, const EndpointType& ep, uint64_t timeout_us = -1 ) {
+        boost::system::error_code connect( AsyncSocket& sock, const EndpointType& ep, const microseconds& timeout_us = microseconds::max() ) {
             promise<boost::system::error_code>::ptr p(new promise<boost::system::error_code>());
             sock.async_connect( ep, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait(timeout_us);
@@ -119,7 +119,7 @@ namespace boost { namespace cmt { namespace asio {
         typedef boost::asio::ip::udp::resolver::iterator resolver_iterator;
         typedef boost::asio::ip::udp::resolver resolver;
         /// @brief asynchronously resolve all udp::endpoints for hostname:port
-        std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, uint64_t timeout_us = -1 );
+        std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, const microseconds& timeout_us = microseconds::max() );
     }
 
 

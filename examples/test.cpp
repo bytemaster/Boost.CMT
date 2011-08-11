@@ -67,7 +67,7 @@ void bench() {
     std::string hellostr("hello");
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
-            async<int>( boost::bind(hello, i), "hello_func" ).wait(10000000);
+            async<int>( boost::bind(hello, i), "hello_func" ).wait(boost::chrono::seconds(1));
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait();//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );

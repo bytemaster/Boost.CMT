@@ -1,7 +1,6 @@
 
 include_directories( include )
 include_directories( ../context/include )
-include_directories( ../move/include )
 include_directories( ../atomic/include )
 
 SET( sources 

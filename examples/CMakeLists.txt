@@ -5,6 +5,7 @@ SET( libraries
     boost_cmt
     boost_context 
     ${Boost_THREAD_LIBRARY} 
+    ${Boost_CHRONO_LIBRARY} 
     ${Boost_ASIO_LIBRARY} 
     ${Boost_SYSTEM_LIBRARY} 
     ${Boost_SIGNALS_LIBRARY})

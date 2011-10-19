@@ -50,7 +50,8 @@ namespace boost { namespace cmt {
              ready_head(0),
              ready_tail(0),
              blocked(0),
-             task_in_queue(0)
+             task_in_queue(0),
+             done(false)
             {}
 
            boost::mutex                     task_ready_mutex;
@@ -59,6 +60,8 @@ namespace boost { namespace cmt {
            boost::atomic<task*>             task_in_queue;
            std::vector<task*>               task_pqueue;
            std::vector<context_t*>          sleep_pqueue;
+
+           bool                      done;
 
            context_t*                current;
            context_t*                ready_head;
@@ -166,14 +169,20 @@ namespace boost { namespace cmt {
 #endif
     }
 
-    void start_thread( const promise<thread*>::ptr p  )
-    {
+    void start_thread( const promise<thread*>::ptr p  ) {
+        slog( "starting cmt::thread" );
         p->set_value( &thread::current() );
         exec();
+        slog( "exiting cmt::thread" );
     }
 
     thread* thread::create() {
-        promise<thread*>::ptr p(new promise<thread*>());
+        if( current().my->current ) {
+          promise<thread*>::ptr p(new promise<thread*>());
+          new boost::thread( boost::bind(start_thread,p) );
+          return p->wait();
+        }
+        promise<thread*>::ptr p(new blocking_promise<thread*>());
         new boost::thread( boost::bind(start_thread,p) );
         return p->wait();
     }
@@ -192,12 +201,12 @@ namespace boost { namespace cmt {
         delete my;
     }
 
-    void thread::usleep( uint64_t timeout_us ) {
+    void thread::sleep_until( const boost::chrono::system_clock::time_point& tp ) {
         //slog( "usleep %1%", timeout_us );
         BOOST_ASSERT( &current() == this );
         BOOST_ASSERT(my->current);
 
-        my->current->resume_time = system_clock::now() + microseconds(timeout_us);
+        my->current->resume_time = tp;
         my->current->prom = 0;
 
         my->sleep_pqueue.push_back(my->current);
@@ -210,6 +219,12 @@ namespace boost { namespace cmt {
         my->current = prev;
         my->current->resume_time = system_clock::time_point::max();
         my->current->prom = 0;
+    }
+    void thread::usleep( uint64_t timeout_us ) {
+        //slog( "usleep %1%", timeout_us );
+        BOOST_ASSERT( &current() == this );
+        BOOST_ASSERT(my->current);
+        sleep_until( system_clock::now() + microseconds(timeout_us) );
     }
 
     void thread::wait( const promise_base::ptr& p, const boost::chrono::microseconds& timeout_us ) {
@@ -279,14 +294,14 @@ namespace boost { namespace cmt {
 
     void thread::exec_fiber( ){
         BOOST_ASSERT( my->current );
-        while( true ) {
+        while( !my->done ) {
             while( my->ready_head  ) {
                 context_t* cur  = my->current;
                 context_t* next = my->ready_pop_front();
                 my->current = next;
                 next->resume();
 
-                BOOST_ASSERT( !next->is_complete() );
+                //BOOST_ASSERT( !next->is_complete() );
 
                 my->current = cur;
                 my->check_for_timeouts();
@@ -323,10 +338,11 @@ namespace boost { namespace cmt {
      */
     void thread::exec() {
         if( !my->current ) {
-            while( true ) {
+            while( !my->done ) {
                 // run ready tasks
                 while( my->ready_head ) {
                     context_t* next = my->ready_pop_front();
+                    my->current = next;
                     next->resume();
                     if( next->is_complete() ) {
                       // elog( "next complete!!" ); 
@@ -346,6 +362,9 @@ namespace boost { namespace cmt {
             }
         }
    }
+    bool thread::is_running()const {
+      return my->current != NULL;
+    }
 
     /**
      *   Switches from the current task to the next ready task.
@@ -382,11 +401,15 @@ namespace boost { namespace cmt {
             cur->prom->set_exception( boost::copy_exception( error::thread_quit() ) );
             cur = my->blocked;
         }
+        my->done = true;
+        my->task_ready.notify_all();
     }
 
 
     void thread::async( const boost::function<void()>& t, priority prio ) {
-       async(task::ptr( new vtask(t,(std::max)(current_priority(),prio)) ) );
+       // disabled in attempt to resolve crashes when current_priority is called from ASIO callback???
+       //async(task::ptr( new vtask(t,(std::max)(current_priority(),prio)) ) );
+       async(task::ptr( new vtask(t,prio) ) );
     }
     void thread::async( const task::ptr& t ) {
         //slog( "async..." );

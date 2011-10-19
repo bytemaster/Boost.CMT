@@ -1,6 +1,7 @@
 #ifndef _BOOST_RPC_LOG_HPP_
 #define _BOOST_RPC_LOG_HPP_
 #include <boost/format.hpp>
+#include <stdint.h>
 #include <iostream>
 
 #ifndef __func__

@@ -33,7 +33,10 @@ namespace boost { namespace cmt {
 
             void async( const boost::function<void()>& t, priority p = priority() );
 
-            static thread* create();
+            const char* name()const;
+            void        set_name( const char* n );
+
+            static thread* create( const char* name = ""  );
 
             /**
              *  Calls function @param f in this thread and returns a future<T> that can
@@ -105,9 +108,6 @@ namespace boost { namespace cmt {
                p->wait(timeout_us);
             }
 
-            void yield();
-            void usleep( uint64_t us );
-            void sleep_until( const system_clock::time_point& tp );
 
             void quit( );
             void exec();
@@ -117,6 +117,16 @@ namespace boost { namespace cmt {
             priority current_priority()const;
             ~thread();
         protected:
+            friend void boost::cmt::yield();
+            friend void boost::cmt::usleep( uint64_t );
+            friend void boost::cmt::sleep_until( const system_clock::time_point& );
+
+            // these methods may only be called from the current thread
+            void yield();
+            void usleep( uint64_t us );
+            void sleep_until( const system_clock::time_point& tp );
+
+
             void wait( const promise_base::ptr& p, const microseconds& timeout_us );
             void notify( const promise_base::ptr& p );
             void exec_fiber();

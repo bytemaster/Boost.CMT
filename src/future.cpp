@@ -14,4 +14,11 @@ namespace boost { namespace cmt {
         if( m_blocked_thread ) m_blocked_thread->notify(ptr(this,true));
     }
 
+    void promise_base::set_task( task* t ) {
+      m_task = t;
+    }
+    void promise_base::cancel() {
+      if( m_task ) m_task->cancel();
+    }
+
 } } // namespace boost::cmt

@@ -1,25 +1,23 @@
-#ifndef _BOOST_CMT_MUTEX_HPP_
-#define _BOOST_CMT_MUTEX_HPP_
+#ifndef _BOOST_CMT_SPINLOCK_HPP_
+#define _BOOST_CMT_SPINLOCK_HPP_
 #include <boost/atomic.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/thread.hpp>
 
 namespace boost{ namespace cmt {
-    /// cmt::thread::current().yield()
-    void yield();
 
     /**
-     *  @class mutex
-     *  @brief A non-blocking mutex, modified spin-lock that yields on failure.
+     *  @class spin_lock
+     *  @brief A non-blocking spin_lock, modified spin-lock that yields on failure.
      *
-     *  This mutex does not block the current thread, but instead attempts to use
+     *  This spin_lock does not block the current thread, but instead attempts to use
      *  an atomic operation to aquire the lock.  If unsuccessful, then it yields to
      *  other tasks before trying again. If there is no current fiber, then yield is
-     *  a no-op and mutex becomes a spin-lock.  
+     *  a no-op and spin_lock becomes a spin-lock.  
      */
-    class mutex {
+    class spin_lock {
         public:
-            mutex():m_state(unlocked){}
+            spin_lock():m_state(unlocked){}
 
             inline bool try_lock() {
                 return m_state.exchange(locked, boost::memory_order_acquire)!=locked;
@@ -34,14 +32,11 @@ namespace boost{ namespace cmt {
                 while( abs_time > boost::get_system_time() ) {
                    if( try_lock() )
                      return true;
-                   yield(); 
                 }
                 return false;
             }
             void lock() {
-                while( m_state.exchange(locked, boost::memory_order_acquire)==locked) {
-                   yield(); 
-                }
+                while( m_state.exchange(locked, boost::memory_order_acquire)==locked) ;
             }
             void unlock() {
                 m_state.store(unlocked, boost::memory_order_release);
@@ -54,4 +49,4 @@ namespace boost{ namespace cmt {
 
 } } // namespace boost::cmt
 
-#endif // _BOOST_CMT_MUTEX_HPP_
+#endif // _BOOST_CMT_SPINLOCK_HPP_

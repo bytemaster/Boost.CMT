@@ -2,6 +2,7 @@
 #define _BOOST_CMT_FUTURE_HPP
 #include <boost/cmt/retainable.hpp>
 #include <boost/cmt/error.hpp>
+#include <boost/cmt/log/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/cmt/mutex.hpp>
 #include <boost/optional.hpp>
@@ -13,12 +14,15 @@ namespace boost { namespace cmt {
     boost::system_time to_system_time( const boost::chrono::system_clock::time_point& t );
 
     class abstract_thread;
+    class task;
     class promise_base :  public retainable {
          public:
              typedef retainable_ptr<promise_base> ptr;
-             promise_base():m_blocked_thread(0),m_timeout(microseconds::max()){}
+             promise_base():m_task(0),m_blocked_thread(0),m_timeout(microseconds::max()){}
              virtual ~promise_base(){}
 
+             void         set_task( task* t );
+             void         cancel();
              virtual bool ready()const = 0;
          protected:
              void enqueue_thread();
@@ -31,6 +35,7 @@ namespace boost { namespace cmt {
              friend class thread;
              friend class thread_private;
 
+             task*                     m_task;
              abstract_thread*          m_blocked_thread;
              microseconds              m_timeout;    
     };
@@ -202,6 +207,8 @@ namespace boost { namespace cmt {
             future( const promise_ptr& p = promise_ptr() )
             :m_prom(p){}
             future( const T& v ):m_prom( new promise<T>(v) ){}
+            
+            void cancel()     { if( m_prom && !ready() ) m_prom->cancel(); }
 
             bool valid()const { return !!m_prom;       }
             bool ready()const { return m_prom->ready();}

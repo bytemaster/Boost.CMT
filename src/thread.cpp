@@ -22,29 +22,31 @@ namespace boost { namespace cmt {
     }
 
     namespace bc = boost::contexts;
-    struct context_t : public bc::context< bc::protected_stack > {
-        typedef context_t* ptr;
+    struct cmt_context : public bc::context< bc::protected_stack > {
+        typedef cmt_context* ptr;
         template<typename Func>
-        context_t( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
+        cmt_context( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
         :bc::context<>( boost::interprocess::move(f), boost::interprocess::move(s),a,b),next_blocked(0),next(0),prom(0){}
 
-        context_t()
-        :bc::context<>(),next_blocked(0),next(0),prom(0){}
+        cmt_context()
+        :bc::context<>(),next_blocked(0),next(0),prom(0),canceled(false){}
 
         priority                 prio;
         promise_base*            prom; 
-        system_clock::time_point  resume_time;
-        context_t*               next_blocked;
-        context_t*               next;
+        system_clock::time_point resume_time;
+        cmt_context*               next_blocked;
+        cmt_context*               next;
+        bool                     canceled;
     };
     struct sleep_priority_less {
-        bool operator()( const context_t::ptr& a, const context_t::ptr& b ) {
+        bool operator()( const cmt_context::ptr& a, const cmt_context::ptr& b ) {
             return a->resume_time > b->resume_time;
         }
     };
 
     class thread_private {
         public:
+
            thread_private()
             :current(0),
              ready_head(0),
@@ -52,27 +54,28 @@ namespace boost { namespace cmt {
              blocked(0),
              task_in_queue(0),
              done(false)
-            {}
+            { name = ""; }
 
            boost::mutex                     task_ready_mutex;
            boost::condition_variable        task_ready;
 
            boost::atomic<task*>             task_in_queue;
            std::vector<task*>               task_pqueue;
-           std::vector<context_t*>          sleep_pqueue;
+           std::vector<cmt_context*>        sleep_pqueue;
 
            bool                      done;
 
-           context_t*                current;
-           context_t*                ready_head;
-           context_t*                ready_tail;
+           const char*               name;
+           cmt_context*                current;
+           cmt_context*                ready_head;
+           cmt_context*                ready_tail;
 
-           context_t*                blocked;
+           cmt_context*                blocked;
 
            system_clock::time_point  check_for_timeouts();
 
-           context_t::ptr ready_pop_front() {
-                context_t::ptr tmp = 0;
+           cmt_context::ptr ready_pop_front() {
+                cmt_context::ptr tmp = 0;
                 if( ready_head ) {
                     tmp        = ready_head;
                     ready_head = tmp->next;
@@ -80,15 +83,18 @@ namespace boost { namespace cmt {
                         ready_tail = 0;
                     tmp->next = 0;
                 }
+                //slog( "ready pop back %1%", tmp );
                 return tmp;
            }
-           void ready_push_front( const context_t::ptr& c ) {
+           void ready_push_front( const cmt_context::ptr& c ) {
+                //slog( "ready push back %1%", c );
                 c->next = ready_head;
                 ready_head = c;
                 if( !ready_tail ) 
                     ready_tail = c;
            }
-           void ready_push_back( const context_t::ptr& c ) {
+           void ready_push_back( const cmt_context::ptr& c ) {
+                //slog( "ready push back %1%", c );
                 c->next = 0;
                 if( ready_tail ) { 
                     ready_tail->next = c;
@@ -137,15 +143,18 @@ namespace boost { namespace cmt {
         }
 
         while( sleep_pqueue.size() && now >= sleep_pqueue.front()->resume_time ) {
-            context_t::ptr c = sleep_pqueue.front();
-            ready_push_back( c );
+            cmt_context::ptr c = sleep_pqueue.front();
             std::pop_heap(sleep_pqueue.begin(), sleep_pqueue.end(), sleep_priority_less() );
             sleep_pqueue.pop_back();
 
             if( c->prom ) {
+                //slog( "c %p -> prom %p set timeout exception", c, c->prom );
                 c->prom->set_exception( boost::copy_exception( error::future_wait_timeout() ) );
-                BOOST_ASSERT(c->prom == NULL );
+                //return system_clock::time_point::min(); // WHY EXIT EARLY?
+                //BOOST_ASSERT(c->prom == NULL );
             }
+            else
+                ready_push_back( c );
         }
         return system_clock::time_point::min();
     }
@@ -169,21 +178,22 @@ namespace boost { namespace cmt {
 #endif
     }
 
-    void start_thread( const promise<thread*>::ptr p  ) {
-        slog( "starting cmt::thread" );
+    void start_thread( const promise<thread*>::ptr p, const char* n  ) {
+        slog( "starting cmt::thread %1%", n );
         p->set_value( &thread::current() );
+        thread::current().set_name(n);
         exec();
-        slog( "exiting cmt::thread" );
+        wlog( "exiting cmt::thread" );
     }
 
-    thread* thread::create() {
+    thread* thread::create( const char* n ) {
         if( current().my->current ) {
           promise<thread*>::ptr p(new promise<thread*>());
-          new boost::thread( boost::bind(start_thread,p) );
+          new boost::thread( boost::bind(start_thread,p,n) );
           return p->wait();
         }
         promise<thread*>::ptr p(new blocking_promise<thread*>());
-        new boost::thread( boost::bind(start_thread,p) );
+        new boost::thread( boost::bind(start_thread,p,n) );
         return p->wait();
     }
 
@@ -213,12 +223,17 @@ namespace boost { namespace cmt {
         std::push_heap( my->sleep_pqueue.begin(),
                         my->sleep_pqueue.end(), sleep_priority_less()   );
 
-        context_t*  prev = my->current;
+        //slog( "my current %1% sleep", my->current );
+        cmt_context*  prev = my->current;
         my->current = 0;
+        //slog( "prev = %1%", prev );
         prev->suspend();
         my->current = prev;
         my->current->resume_time = system_clock::time_point::max();
         my->current->prom = 0;
+        if( my->current->canceled ) {
+          BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
+        }
     }
     void thread::usleep( uint64_t timeout_us ) {
         //slog( "usleep %1%", timeout_us );
@@ -236,52 +251,39 @@ namespace boost { namespace cmt {
 
         if( timeout_us != microseconds::max() ) {
             my->current->resume_time = system_clock::now() + timeout_us;
+            //slog( "%p blocked on promise %p", my->current, p.get() );
             my->current->prom = p.get();
             my->sleep_pqueue.push_back(my->current);
             std::push_heap( my->sleep_pqueue.begin(),
                             my->sleep_pqueue.end(), sleep_priority_less()   );
         }
 
-        context_t* tmp = my->current;
+        cmt_context* tmp = my->current;
         my->current = NULL;
 
         tmp->prom         = p.get();
         tmp->next_blocked = my->blocked;
         my->blocked = tmp;
-
+        //slog( "tmp -> suspend %1%", tmp );
         tmp->suspend();
+        //slog( "cur %p-> prom %p = 0", tmp, tmp->prom ); 
         tmp->prom = 0;
+        if( my->current->canceled ) {
+          BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
+        }
     }
 
     void thread::notify( const promise_base::ptr& p ) {
+        //slog( " notify %p ", p.get() );
         BOOST_ASSERT(p->ready());
         if( &current() != this )  {
             async( boost::bind( &thread::notify, this, p ) );
             return;
         }
-        //slog( "notify! %1%  ready %2%", p.get(), p->ready() );
-        context_t* cur_blocked  = my->blocked;
-        context_t* prev_blocked = 0;
-        while( cur_blocked ) {
-            if( cur_blocked->prom == p.get() ) {
-                if( prev_blocked ) { 
-                    prev_blocked->next_blocked = cur_blocked->next_blocked; 
-                } else { 
-                    my->blocked = cur_blocked->next_blocked; 
-                }
-                cur_blocked->next_blocked = 0;
-                //cur_blocked->prom         = 0;
-                my->ready_push_front( cur_blocked );
+        //slog( "notify! %1%  ready %2% sqs %3%", p.get(), p->ready(), my->sleep_pqueue.size() );
 
-
-                // stop searching after waking one task
-                cur_blocked = 0;
-            } else {
-                prev_blocked  = cur_blocked;
-                cur_blocked   = cur_blocked->next_blocked;
-            }
-        }
         for( uint32_t i = 0; i < my->sleep_pqueue.size(); ++i ) {
+            //slog( "sleep queue %d prom %p ", i, my->sleep_pqueue[i]->prom );
             if( my->sleep_pqueue[i]->prom == p.get() ) {
                 my->sleep_pqueue[i]->prom = 0;
                 my->sleep_pqueue[i] = my->sleep_pqueue.back();
@@ -290,28 +292,58 @@ namespace boost { namespace cmt {
                 break;
             }
         }
+
+        cmt_context* cur_blocked  = my->blocked;
+        cmt_context* prev_blocked = 0;
+        while( cur_blocked ) {
+            if( cur_blocked->prom == p.get() ) {
+                if( prev_blocked ) { 
+                    prev_blocked->next_blocked = cur_blocked->next_blocked; 
+                } else { 
+                    my->blocked = cur_blocked->next_blocked; 
+                }
+                //slog( "unblock c %1%", cur_blocked );
+                cur_blocked->next_blocked = 0;
+                //cur_blocked->prom         = 0;
+                //slog( "ready push front %1%", cur_blocked);
+                my->ready_push_front( cur_blocked );
+
+                // I use to set this to 0 to stop, by don't know why
+                cur_blocked = 0;//cur_blocked->next_blocked;
+            } else {
+                prev_blocked  = cur_blocked;
+                cur_blocked   = cur_blocked->next_blocked;
+            }
+        }
     }
 
     void thread::exec_fiber( ){
+      try {
         BOOST_ASSERT( my->current );
         while( !my->done ) {
             while( my->ready_head  ) {
-                context_t* cur  = my->current;
-                context_t* next = my->ready_pop_front();
+                //slog( "cur %1%", my->current );
+                cmt_context* cur  = my->current;
+                cmt_context* next = my->ready_pop_front();
                 my->current = next;
+                BOOST_ASSERT( next != cur );
+                //slog( "resume %1% from %2%", next, cur );
                 next->resume();
+                //slog( "post resume %p", next );
 
                 //BOOST_ASSERT( !next->is_complete() );
 
                 my->current = cur;
+                //slog( "pre cft cur %1%", my->current );
                 my->check_for_timeouts();
+                //slog( "post cft cur %1%", my->current );
             }
 
             task::ptr next = my->dequeue();
             if( !next ) {
                 system_clock::time_point timeout_time = my->check_for_timeouts();
 
-                if( timeout_time == system_clock::time_point::min() )
+                if( my->done || timeout_time == system_clock::time_point::min() )
                     continue;
                 boost::unique_lock<boost::mutex> lock(my->task_ready_mutex);
                 if( !(next = my->dequeue())) {
@@ -324,11 +356,18 @@ namespace boost { namespace cmt {
                 }
             }
             BOOST_ASSERT(next);
-            if( my->current ) 
-                my->current->prio = next->prio;
+            BOOST_ASSERT(my->current);
+          //  if( my->current ) 
+          //      my->current->prio = next->prio;
+            next->set_active_context( my->current );
             next->run();
+            next->set_active_context( 0 );
             next->release();
+            my->current->canceled = false;
         }
+      } catch ( boost::exception& e ) {
+        elog( "%1%", boost::diagnostic_information(e) );
+      }
     }
 
     /**
@@ -337,12 +376,14 @@ namespace boost { namespace cmt {
      *  empty and then block.
      */
     void thread::exec() {
+        int ctx_count = 0;
         if( !my->current ) {
             while( !my->done ) {
                 // run ready tasks
                 while( my->ready_head ) {
-                    context_t* next = my->ready_pop_front();
+                    cmt_context* next = my->ready_pop_front();
                     my->current = next;
+                //slog( "resume %1%", next );
                     next->resume();
                     if( next->is_complete() ) {
                       // elog( "next complete!!" ); 
@@ -351,13 +392,16 @@ namespace boost { namespace cmt {
                     my->current = 0;
                     my->check_for_timeouts();
                 }
-                //wlog( "creating new context" );
+                
+                //wlog( "creating new context %1%", ++ctx_count );
                 // create a new coro if there are no ready tasks
-                context_t* new_context = new context_t( boost::bind(&thread::exec_fiber,this), 
+                cmt_context* new_context = new cmt_context( boost::bind(&thread::exec_fiber,this), 
                                                  bc::protected_stack( bc::stack_helper::default_stacksize() ), true, true );
                 my->current = new_context;
+                //slog( "resume %1%", my->current );
                 my->current->resume(); 
                 delete my->current;
+                //wlog( "deleting new context %1%", --ctx_count );
                 my->current = 0;
             }
         }
@@ -383,24 +427,39 @@ namespace boost { namespace cmt {
      */
     void thread::yield() {
         if( my->current ) {
-            context_t*  prev = my->current;
+            cmt_context*  prev = my->current;
             my->ready_push_back(my->current);
             my->current = 0;
             my->ready_tail->suspend();
             my->current = prev;
+            if( my->current->canceled ) {
+              BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
+            }
         }
     }
 
     void thread::quit() {
         if( &current() != this ) {
-            async( boost::bind( &thread::quit, this ) );
+            async<void>( boost::bind( &thread::quit, this ) ).wait();
+            return;
         }
-        context_t* cur  = my->blocked;
+        cmt_context* cur  = my->blocked;
         while( cur ) {
+            cur->canceled = true;
             // setting the exception, will notify, thus modify blocked list
-            cur->prom->set_exception( boost::copy_exception( error::thread_quit() ) );
-            cur = my->blocked;
+            //cur->prom->set_exception( boost::copy_exception( error::thread_quit() ) );
+            //cur = my->blocked;
+            cur = cur->next;
         }
+        cur = my->ready_head;
+        while( cur ) {
+          cur->canceled = true;
+          cur = cur->next;
+        }
+        for( uint32_t i = 0; i < my->sleep_pqueue.size(); ++i ) {
+          my->sleep_pqueue[i]->canceled = true;
+        }
+
         my->done = true;
         my->task_ready.notify_all();
     }
@@ -430,6 +489,24 @@ namespace boost { namespace cmt {
     priority thread::current_priority()const {
         if( my->current ) return my->current->prio;
         return priority();
+    }
+
+    const char* thread::name()const               { return my->name; }
+    void        thread::set_name( const char* n ) { my->name = n;    }
+    const char* thread_name() { return thread::current().name(); }
+
+
+    /**
+     *  This is implemented in thread.cpp because it needs access to the cmt_context type
+     *  in order to kill the current context.
+     */
+    void task::cancel() {
+      boost::unique_lock<cmt::spin_lock> lock( active_context_lock );
+      canceled = true;
+      if( active_context ) {
+        active_context->canceled = true;
+        active_context = 0;
+      }
     }
 
 } } // namespace boost::cmt 

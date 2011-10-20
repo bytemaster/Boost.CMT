@@ -1,4 +1,5 @@
 #include <boost/cmt/asio.hpp>
+#include <boost/cmt/thread.hpp>
 
 namespace boost { namespace cmt { namespace asio {
     namespace detail {
@@ -40,8 +41,15 @@ namespace boost { namespace cmt { namespace asio {
     }
     namespace udp {
         std::vector<endpoint> resolve( resolver& r, const std::string& hostname, const std::string& port, const microseconds& timeout_us  ) {
+            if( boost::cmt::thread::current().is_running() ) {
+                resolver res( boost::cmt::asio::default_io_service() );
+                promise<std::vector<endpoint> >::ptr p( new promise<std::vector<endpoint> >() );
+                res.async_resolve( resolver::query(hostname,port), 
+                                    boost::bind( detail::resolve_handler<endpoint,resolver_iterator>, p, _1, _2 ) );
+                return p->wait(timeout_us);
+            } 
             resolver res( boost::cmt::asio::default_io_service() );
-            promise<std::vector<endpoint> >::ptr p( new promise<std::vector<endpoint> >() );
+            promise<std::vector<endpoint> >::ptr p( new blocking_promise<std::vector<endpoint> >() );
             res.async_resolve( resolver::query(hostname,port), 
                                 boost::bind( detail::resolve_handler<endpoint,resolver_iterator>, p, _1, _2 ) );
             return p->wait(timeout_us);

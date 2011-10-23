@@ -26,7 +26,7 @@ namespace boost { namespace cmt {
         typedef cmt_context* ptr;
         template<typename Func>
         cmt_context( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
-        :bc::context<>( boost::interprocess::move(f), boost::interprocess::move(s),a,b),next_blocked(0),next(0),prom(0){}
+        :bc::context<>( boost::interprocess::move(f), boost::interprocess::move(s),a,b),next_blocked(0),next(0),prom(0),canceled(false){}
 
         cmt_context()
         :bc::context<>(),next_blocked(0),next(0),prom(0),canceled(false){}

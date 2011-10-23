@@ -1,0 +1,4 @@
+1) When a task is canceled, and that task is currently blocking... cancel the task it is blocking on as well.  
+This could cause interesting things to happen if two tasks are blocking on the same future... one may be canceled,
+but not the other... thus, there needs to be a 'block count' to determine how many tasks are blocking on a task
+and only cancel the subtask if its block count == 1

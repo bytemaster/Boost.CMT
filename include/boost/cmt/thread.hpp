@@ -116,6 +116,8 @@ namespace boost { namespace cmt {
 
             priority current_priority()const;
             ~thread();
+
+            void set_boost_thread( boost::thread* t );
         protected:
             friend void boost::cmt::yield();
             friend void boost::cmt::usleep( uint64_t );

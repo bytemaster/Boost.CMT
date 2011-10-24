@@ -139,15 +139,34 @@ namespace boost { namespace cmt {
            }
 
     };
-    system_clock::time_point thread_private::check_for_timeouts() {
-        if( !sleep_pqueue.size() ) 
-            return system_clock::time_point::max();
 
-        boost::chrono::system_clock::time_point now = boost::chrono::system_clock::now();
-        if( now < sleep_pqueue.front()->resume_time ) {
-            return sleep_pqueue.front()->resume_time;
+    /**
+     *    Return system_clock::time_point::min() if tasks have timed out
+     *    Retunn system_clock::time_point::max() if there are no scheduled tasks
+     *    Return the time the next task needs to be run if there is anything scheduled.
+     */
+    system_clock::time_point thread_private::check_for_timeouts() {
+
+        slog( "sleep_pqueue size %1%, task_sch_queue.size: %2%", sleep_pqueue.size(), task_sch_queue.size() );
+        if( !sleep_pqueue.size() && !task_sch_queue.size() ) {
+            slog( "           return max" );
+            return system_clock::time_point::max();
         }
 
+
+        system_clock::time_point next = system_clock::time_point::max();
+        if( task_sch_queue.size() && next > task_sch_queue.front()->when )
+          next = task_sch_queue.front()->when;
+        if( sleep_pqueue.size() && next > sleep_pqueue.front()->resume_time )
+          next = sleep_pqueue.front()->resume_time;
+
+        boost::chrono::system_clock::time_point now = boost::chrono::system_clock::now();
+        if( now < next ) {
+          slog( "           return %1% us", duration_cast<microseconds>(next-now).count() );
+          return next;
+        }
+
+        // move all expired sleeping tasks to the ready queue
         while( sleep_pqueue.size() && now >= sleep_pqueue.front()->resume_time ) {
             cmt_context::ptr c = sleep_pqueue.front();
             std::pop_heap(sleep_pqueue.begin(), sleep_pqueue.end(), sleep_priority_less() );
@@ -162,6 +181,7 @@ namespace boost { namespace cmt {
             else
                 ready_push_back( c );
         }
+        slog( "           return min" );
         return system_clock::time_point::min();
     }
 

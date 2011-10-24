@@ -67,6 +67,7 @@ namespace boost { namespace cmt {
 
            boost::atomic<task*>             task_in_queue;
            std::vector<task*>               task_pqueue;
+           std::vector<task*>               task_sch_queue;
            std::vector<cmt_context*>        sleep_pqueue;
 
            bool                      done;
@@ -114,12 +115,25 @@ namespace boost { namespace cmt {
                    return a->prio.value < b->prio.value ? true :  (a->prio.value > b->prio.value ? false : a->posted_num > b->posted_num );
                }
            };
+           struct task_when_less {
+               bool operator()( const task::ptr& a, const task::ptr& b ) {
+                   return a->when < b->when;
+               }
+           };
            void enqueue( const task::ptr& t ) {
                 task::ptr cur = t;
+                system_clock::time_point now = system_clock::now();
                 while( cur ) {
-                    task_pqueue.push_back(cur);
-                    std::push_heap( task_pqueue.begin(),
-                                    task_pqueue.end(), task_priority_less()   );
+                    // TODO: push to task_sch_queue if when is specified
+                    if( cur->when > now ) {
+                        task_sch_queue.push_back(cur);
+                        std::push_heap( task_sch_queue.begin(),
+                                        task_sch_queue.end(), task_priority_less()   );
+                    }else {
+                        task_pqueue.push_back(cur);
+                        std::push_heap( task_pqueue.begin(),
+                                        task_pqueue.end(), task_priority_less()   );
+                    }
                     cur = cur->next;
                 }
            }
@@ -130,6 +144,16 @@ namespace boost { namespace cmt {
                     enqueue( pending );
                 }
                 task::ptr p(0);
+                // TODO: if task_sch_queue
+                if( task_sch_queue.size() ) {
+                    if( task_pqueue.front()->when <= system_clock::now() ) {
+                        p = task_sch_queue.front();
+                        std::pop_heap(task_sch_queue.begin(), task_sch_queue.end(), task_when_less() );
+                        task_sch_queue.pop_back();
+                        return p;
+                    }
+                }
+
                 if( task_pqueue.size() ) {
                     p = task_pqueue.front();
                     std::pop_heap(task_pqueue.begin(), task_pqueue.end(), task_priority_less() );

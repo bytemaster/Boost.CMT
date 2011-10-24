@@ -11,6 +11,7 @@ namespace boost { namespace cmt {
     }
 
     void promise_base::notify() {
+        BOOST_ASSERT( ready() );
         if( m_blocked_thread ) m_blocked_thread->notify(ptr(this,true));
     }
 

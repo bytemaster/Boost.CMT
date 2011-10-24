@@ -28,6 +28,10 @@ namespace boost { namespace cmt {
             :prio(p),next(0),active_context(0),canceled(false){
                 static int64_t global_task_count=0;
                 posted_num = ++global_task_count;
+           //     slog( "new task %1%", posted_num );
+            }
+            ~task() {
+           //   slog( "deleting %1%", posted_num );
             }
 
             virtual void run() = 0;
@@ -64,7 +68,6 @@ namespace boost { namespace cmt {
                     else
                         m_prom->set_exception( boost::copy_exception( error::task_canceled() ) );
                 } catch( ... ) {
-                    slog( "%1%", this );
                     m_prom->set_exception(boost::current_exception());
                 }
             }

@@ -23,6 +23,7 @@ namespace boost { namespace cmt {
            promise<void_t>::ptr p(new promise<void_t>());
            boost::signals::scoped_connection c = sig.connect( boost::bind(&promise<void_t>::set_value,p,void_t()) );
            p->wait( timeout_us ); 
+           return;
        }
        blocking_promise<void_t>::ptr p(new blocking_promise<void_t>());
        boost::signals::scoped_connection c = sig.connect( boost::bind(&blocking_promise<void_t>::set_value,p,void_t()) );

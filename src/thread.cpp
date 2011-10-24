@@ -298,18 +298,8 @@ namespace boost { namespace cmt {
             async( boost::bind( &thread::notify, this, p ) );
             return;
         }
-        //slog( "notify! %1%  ready %2% sqs %3%", p.get(), p->ready(), my->sleep_pqueue.size() );
+        slog( "notify! %1%  ready %2% sqs %3%", p.get(), p->ready(), my->sleep_pqueue.size() );
 
-        for( uint32_t i = 0; i < my->sleep_pqueue.size(); ++i ) {
-            //slog( "sleep queue %d prom %p ", i, my->sleep_pqueue[i]->prom );
-            if( my->sleep_pqueue[i]->prom == p.get() ) {
-                my->sleep_pqueue[i]->prom = 0;
-                my->sleep_pqueue[i] = my->sleep_pqueue.back();
-                my->sleep_pqueue.pop_back();
-                std::make_heap( my->sleep_pqueue.begin(),my->sleep_pqueue.end(), sleep_priority_less() );
-                break;
-            }
-        }
 
         cmt_context* cur_blocked  = my->blocked;
         cmt_context* prev_blocked = 0;
@@ -323,14 +313,26 @@ namespace boost { namespace cmt {
                 //slog( "unblock c %1%", cur_blocked );
                 cur_blocked->next_blocked = 0;
                 //cur_blocked->prom         = 0;
-                //slog( "ready push front %1%", cur_blocked);
+                slog( "ready push front %1%", cur_blocked);
                 my->ready_push_front( cur_blocked );
 
                 // I use to set this to 0 to stop, by don't know why
-                cur_blocked = 0;//cur_blocked->next_blocked;
+                cur_blocked =  cur_blocked->next_blocked;
             } else {
                 prev_blocked  = cur_blocked;
                 cur_blocked   = cur_blocked->next_blocked;
+            }
+        }
+        // TODO: what if multiple things are blocked sleeping on this promise??
+        for( uint32_t i = 0; i < my->sleep_pqueue.size(); ++i ) {
+            //slog( "sleep queue %d prom %p ", i, my->sleep_pqueue[i]->prom );
+            if( my->sleep_pqueue[i]->prom == p.get() ) {
+                slog( "popin item from sleep pqueue" );
+                my->sleep_pqueue[i]->prom = 0;
+                my->sleep_pqueue[i] = my->sleep_pqueue.back();
+                my->sleep_pqueue.pop_back();
+                std::make_heap( my->sleep_pqueue.begin(),my->sleep_pqueue.end(), sleep_priority_less() );
+                break;
             }
         }
     }

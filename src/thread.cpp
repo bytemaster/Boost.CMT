@@ -67,6 +67,7 @@ namespace boost { namespace cmt {
 
            boost::atomic<task*>             task_in_queue;
            std::vector<task*>               task_pqueue;
+           std::vector<task*>               task_sch_queue;
            std::vector<cmt_context*>        sleep_pqueue;
 
            bool                      done;
@@ -114,22 +115,42 @@ namespace boost { namespace cmt {
                    return a->prio.value < b->prio.value ? true :  (a->prio.value > b->prio.value ? false : a->posted_num > b->posted_num );
                }
            };
+            struct task_when_less {
+                bool operator()( const task::ptr& a, const task::ptr& b ) {
+                    return a->when < b->when;
+                }
+            };
+
            void enqueue( const task::ptr& t ) {
+                system_clock::time_point now = system_clock::now();
                 task::ptr cur = t;
                 while( cur ) {
+                  if( cur->when > now ) {
+                    task_sch_queue.push_back(cur);
+                    std::push_heap( task_sch_queue.begin(),
+                                    task_sch_queue.end(), task_when_less()   );
+                  } else {
                     task_pqueue.push_back(cur);
                     std::push_heap( task_pqueue.begin(),
                                     task_pqueue.end(), task_priority_less()   );
+                  }
                     cur = cur->next;
                 }
            }
            task::ptr dequeue() {
                 // get a new task
                 task::ptr pending = task_in_queue.exchange(0,boost::memory_order_consume);
-                if( pending ) {
-                    enqueue( pending );
-                }
+                if( pending ) { enqueue( pending ); }
+
                 task::ptr p(0);
+                if( task_sch_queue.size() ) {
+                    if( task_sch_queue.front()->when <= system_clock::now() ) {
+                        p = task_sch_queue.front();
+                        std::pop_heap(task_sch_queue.begin(), task_sch_queue.end(), task_when_less() );
+                        task_sch_queue.pop_back();
+                        return p;
+                    }
+                }
                 if( task_pqueue.size() ) {
                     p = task_pqueue.front();
                     std::pop_heap(task_pqueue.begin(), task_pqueue.end(), task_priority_less() );
@@ -147,9 +168,9 @@ namespace boost { namespace cmt {
      */
     system_clock::time_point thread_private::check_for_timeouts() {
 
-        slog( "sleep_pqueue size %1%, task_sch_queue.size: %2%", sleep_pqueue.size(), task_sch_queue.size() );
+        //slog( "sleep_pqueue size %1%, task_sch_queue.size: %2%", sleep_pqueue.size(), task_sch_queue.size() );
         if( !sleep_pqueue.size() && !task_sch_queue.size() ) {
-            slog( "           return max" );
+         //   slog( "           return max" );
             return system_clock::time_point::max();
         }
 
@@ -162,7 +183,7 @@ namespace boost { namespace cmt {
 
         boost::chrono::system_clock::time_point now = boost::chrono::system_clock::now();
         if( now < next ) {
-          slog( "           return %1% us", duration_cast<microseconds>(next-now).count() );
+         // slog( "           return %1% us", duration_cast<microseconds>(next-now).count() );
           return next;
         }
 
@@ -181,7 +202,7 @@ namespace boost { namespace cmt {
             else
                 ready_push_back( c );
         }
-        slog( "           return min" );
+       // slog( "           return min" );
         return system_clock::time_point::min();
     }
 
@@ -259,18 +280,14 @@ namespace boost { namespace cmt {
         std::push_heap( my->sleep_pqueue.begin(),
                         my->sleep_pqueue.end(), sleep_priority_less()   );
 
-        elog( "sleep pqueue size %1%", my->sleep_pqueue.size() );
-        slog( "my current %1% sleep", my->current );
         cmt_context*  prev = my->current;
         my->current = 0;
         //slog( "prev = %1%", prev );
         prev->suspend();
         my->current = prev;
-        slog( "my current %1% wake", my->current );
         my->current->resume_time = system_clock::time_point::max();
         my->current->prom = 0;
         if( my->current->canceled ) {
-          wlog( "throwing canceled exception" );
           BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
         }
     }
@@ -318,7 +335,7 @@ namespace boost { namespace cmt {
             async( boost::bind( &thread::notify, this, p ) );
             return;
         }
-        slog( "notify! %1%  ready %2% sqs %3%", p.get(), p->ready(), my->sleep_pqueue.size() );
+     //   slog( "notify! %1%  ready %2% sqs %3%", p.get(), p->ready(), my->sleep_pqueue.size() );
 
 
         cmt_context* cur_blocked  = my->blocked;
@@ -333,7 +350,7 @@ namespace boost { namespace cmt {
                 //slog( "unblock c %1%", cur_blocked );
                 cur_blocked->next_blocked = 0;
                 //cur_blocked->prom         = 0;
-                slog( "ready push front %1%", cur_blocked);
+      //          slog( "ready push front %1%", cur_blocked);
                 my->ready_push_front( cur_blocked );
 
                 // I use to set this to 0 to stop, by don't know why
@@ -347,7 +364,7 @@ namespace boost { namespace cmt {
         for( uint32_t i = 0; i < my->sleep_pqueue.size(); ++i ) {
             //slog( "sleep queue %d prom %p ", i, my->sleep_pqueue[i]->prom );
             if( my->sleep_pqueue[i]->prom == p.get() ) {
-                slog( "popin item from sleep pqueue" );
+       //         slog( "popin item from sleep pqueue" );
                 my->sleep_pqueue[i]->prom = 0;
                 my->sleep_pqueue[i] = my->sleep_pqueue.back();
                 my->sleep_pqueue.pop_back();

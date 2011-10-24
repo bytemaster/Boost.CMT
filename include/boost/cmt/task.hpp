@@ -10,7 +10,6 @@
 #include <boost/cmt/log/log.hpp>
 
 namespace boost { namespace cmt {
-    using namespace boost::chrono;
 
      struct cmt_context;
 
@@ -25,14 +24,10 @@ namespace boost { namespace cmt {
     class task : public retainable {
         public:
             typedef task* ptr;
-            task(priority p=priority(),const system_clock::time_point& w = system_clock::time_point())
-            :when(w),prio(p),next(0),active_context(0),canceled(false){
+            task(priority p=priority())
+            :prio(p),next(0),active_context(0),canceled(false){
                 static int64_t global_task_count=0;
                 posted_num = ++global_task_count;
-           //     slog( "new task %1%", posted_num );
-            }
-            ~task() {
-           //   slog( "deleting %1%", posted_num );
             }
 
             virtual void run() = 0;
@@ -47,22 +42,17 @@ namespace boost { namespace cmt {
             static int64_t        task_num;
             friend class          thread;
             friend class          thread_private;
-
-            system_clock::time_point when;
-            bool                                    canceled;
-            uint64_t                                posted_num;
-            priority                                prio;
-            task*                                   next;
-            cmt_context*                            active_context;
-            boost::cmt::spin_lock                   active_context_lock;
+            bool                  canceled;
+            uint64_t              posted_num;
+            priority              prio;
+            task*                 next;
+            cmt_context*            active_context;
+            boost::cmt::spin_lock active_context_lock;
     };
 
     template<typename R = void>
     class rtask : public task {
         public:
-            rtask( const boost::function<R()>& f, const typename promise<R>::ptr& p, const system_clock::time_point& tp, priority prio, const char* name = "" )
-            :task(prio,tp),m_functor(f),m_prom(p),m_name(name){ m_prom->set_task(this); }
-
             rtask( const boost::function<R()>& f, const typename promise<R>::ptr& p, priority prio, const char* name = "" )
             :task(prio),m_functor(f),m_prom(p),m_name(name){ m_prom->set_task(this); }
             ~rtask(){ m_prom->set_task(0); }
@@ -74,6 +64,7 @@ namespace boost { namespace cmt {
                     else
                         m_prom->set_exception( boost::copy_exception( error::task_canceled() ) );
                 } catch( ... ) {
+                    slog( "%1%", this );
                     m_prom->set_exception(boost::current_exception());
                 }
             }
@@ -87,9 +78,6 @@ namespace boost { namespace cmt {
     template<>
     class rtask<void> : public task {
         public:
-            rtask( const boost::function<void()>& f, const typename promise<void>::ptr& p, const system_clock::time_point& tp, priority prio, const char* name = "" )
-            :task(prio,tp),m_functor(f),m_prom(p),m_name(name){ m_prom->set_task(this); }
-
             rtask( const boost::function<void()>& f, const  promise<void>::ptr& p, priority prio=priority(), const char* name = "" )
             :task(prio),m_functor(f),m_prom(p),m_name(name){ m_prom->set_task(this); }
             ~rtask() { m_prom->set_task(0); }
@@ -171,15 +159,12 @@ namespace boost { namespace cmt {
     class vtask : public task {
         
         public:
-        vtask( const boost::function<void()>& f, priority prio = priority(), const char* n="" )
-        :task(prio),m_functor(f),m_name(n){ }
-        vtask( const boost::function<void()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n="" )
-        :task(prio,when),m_functor(f),m_name(n){ }
+        vtask( const boost::function<void()>& f, priority prio = priority() )
+        :task(prio),m_functor(f){ }
 
         void cancel() {}
         void run() {
             try {
-              if( !canceled )
                 m_functor();
             } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
@@ -189,9 +174,7 @@ namespace boost { namespace cmt {
                 BOOST_ASSERT(!"unhandled exception");
             }
         }
-        virtual const char* name() { return m_name; }
         boost::function<void()> m_functor;
-        const char*             m_name;
     };
 
 } } // namespace boost cmt

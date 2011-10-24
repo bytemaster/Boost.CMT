@@ -25,7 +25,7 @@ void bench();
 void_t delay()
 {
     slog( "delay 3 sec, %1%", 3.13);
-    boost::cmt::usleep(3000000);
+    boost::cmt::thread::current().usleep(3000000);
     slog( "test_signal");
     test_signal("hello world!");
 	return void_t();

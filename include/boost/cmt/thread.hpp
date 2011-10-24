@@ -38,6 +38,41 @@ namespace boost { namespace cmt {
 
             static thread* create( const char* name = ""  );
 
+
+            /**
+             *  Calls function @param f in this thread and returns a future<T> that can
+             *  be used to wait on the result.   If async is called from a thread not currently
+             *  calling exec() then the future will block on a mutex/wait condition.  If async is
+             *  called from a thread running exec() then it will block 'cooperatively' and allow
+             *  other tasks to run in that thread until this thread has returned a result.
+             *
+             *  @note Calling boost::cmt::async(...).wait() in a thread before calling exec will
+             *  block that thread forever because the thread will not get a chance to process
+             *  the call before blocking the thread.
+             *
+             *  @param when - determines when this call will happen, as soon as possible after @parm when
+             */
+            template<typename T>
+            future<T> schedule( const boost::function<T()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n= "" ) {
+               if( current().is_running() ) {
+                   typename promise<T>::ptr p(new promise<T>());
+                   task::ptr tsk( new rtask<T>(f,p,when,std::max(current_priority(),prio),n) );
+                   async(tsk);
+                   return p;
+               }
+               typename promise<T>::ptr p(new blocking_promise<T>());
+               task::ptr tsk( new rtask<T>(f,p,std::max(current_priority(),prio),n) );
+               async(tsk);
+               return p;
+            }
+            void schedule( const boost::function<void()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n= "" ) {
+                   task::ptr tsk( new vtask(f,when,std::max(current_priority(),prio),n) );
+                   async(tsk);
+            }
+
+
+
+
             /**
              *  Calls function @param f in this thread and returns a future<T> that can
              *  be used to wait on the result.   If async is called from a thread not currently

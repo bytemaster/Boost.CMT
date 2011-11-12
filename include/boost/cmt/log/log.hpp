@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <iomanip>
+#include <boost/exception/diagnostic_information.hpp>
 
 #ifndef __func__
 #define __func__ __FUNCTION__
@@ -63,19 +64,27 @@ namespace boost { namespace cmt {
 } } } // boost::cmt::detail
 
 #define dlog(...) do {try { boost::cmt::detail::log( std::cerr, CONSOLE_DEFAULT, __FILE__, __LINE__, __func__, __VA_ARGS__ ); } \
-                catch (...){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs"); }  \
+                catch (boost::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (std::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (...) {boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
 #define slog(...) do {try {boost::cmt::detail::log( std::cerr, CONSOLE_DEFAULT, __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
-                catch (...){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs"); }  \
+                catch (boost::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (std::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (...) {boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
 #define elog(...) do {try {boost::cmt::detail::log( std::cerr, CONSOLE_RED,     __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
-                catch (...){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs"); }  \
+                catch (boost::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (std::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (...) {boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
 #define wlog(...) do {try {boost::cmt::detail::log( std::cerr, CONSOLE_BROWN,   __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
-                catch (...){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs"); }  \
+                catch (boost::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (std::exception&e){ boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
+                catch (...) {boost::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
 #endif 

@@ -573,6 +573,7 @@ namespace boost { namespace cmt {
 
     priority current_priority() { return cmt::thread::current().current_priority(); }
     priority thread::current_priority()const {
+        BOOST_ASSERT(my);
         if( my->current ) return my->current->prio;
         return priority();
     }

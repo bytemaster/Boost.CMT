@@ -11,6 +11,7 @@
 
 namespace boost { namespace cmt {
     using boost::chrono::microseconds;
+    using boost::chrono::system_clock;
     boost::system_time to_system_time( const boost::chrono::system_clock::time_point& t );
 
     class abstract_thread;
@@ -27,6 +28,7 @@ namespace boost { namespace cmt {
          protected:
              void enqueue_thread();
              void wait( const microseconds& timeout_us );
+             void wait_until( const system_clock::time_point& timeout_us );
              void notify();
              virtual void set_timeout()=0;
              virtual void set_exception( const boost::exception_ptr& e )=0;
@@ -79,6 +81,25 @@ namespace boost { namespace cmt {
                 BOOST_THROW_EXCEPTION( error::future_value_not_ready() ); 
                 return *m_value;
             }
+
+            virtual const T& wait_until(const system_clock::time_point& timeout  ) {
+                { // lock while we check values
+                    boost::unique_lock<mutex> lock( m_mutex );
+                    if( m_error ) boost::rethrow_exception(m_error);
+                    if( m_value ) return *m_value;
+                    enqueue_thread();
+                } // unlock before yielding, but after enqueing
+                promise_base::wait_until(timeout);
+                if( m_error ) { 
+                  boost::exception_ptr    er = m_error;
+                  m_error = boost::exception_ptr();
+                  boost::rethrow_exception(er);
+                }
+                if( m_value ) return *m_value;
+                BOOST_THROW_EXCEPTION( error::future_value_not_ready() ); 
+                return *m_value;
+            }
+
             virtual void set_exception( const boost::exception_ptr& e ) {
                 {
                     boost::unique_lock<mutex> lock( m_mutex );
@@ -142,6 +163,18 @@ namespace boost { namespace cmt {
                 BOOST_THROW_EXCEPTION( boost::cmt::error::future_value_not_ready() ); 
                 return *(this->m_value);
             }
+
+            virtual const T& wait_until(const system_clock::time_point& timeout ) {
+                boost::unique_lock<boost::mutex> lock( bmutex );
+                if( this->m_error ) boost::rethrow_exception(this->m_error);
+                if( this->m_value ) return *(this->m_value);
+                    value_ready.timed_wait( lock, to_system_time(timeout) );
+                if( this->m_error ) boost::rethrow_exception(this->m_error);
+                if( this->m_value ) return *(this->m_value); 
+                BOOST_THROW_EXCEPTION( boost::cmt::error::future_value_not_ready() ); 
+                return *(this->m_value);
+            }
+
             virtual void set_exception( const boost::exception_ptr& e ) {
                 boost::unique_lock<boost::mutex> lock( bmutex );
                 this->m_error = e;
@@ -220,6 +253,10 @@ namespace boost { namespace cmt {
             const T& wait(const microseconds& timeout = microseconds::max() ) { 
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait(timeout); 
+            }
+            const T& wait_until(const system_clock::time_point& timeout ) { 
+                if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
+                return m_prom->wait_until(timeout); 
             }
 
         private:

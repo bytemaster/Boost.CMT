@@ -9,6 +9,9 @@ namespace boost { namespace cmt {
     void promise_base::wait( const boost::chrono::microseconds& timeout_us ) {
         thread::current().wait( ptr(this,true), timeout_us ); 
     }
+    void promise_base::wait_until( const system_clock::time_point& timeout_time ) {
+        thread::current().wait( ptr(this,true), timeout_time ); 
+    }
 
     void promise_base::notify() {
         BOOST_ASSERT( ready() );

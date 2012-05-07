@@ -20,6 +20,7 @@ namespace boost { namespace cmt {
         protected:
             friend class promise_base;
             virtual void wait( const promise_base::ptr& p, const boost::chrono::microseconds& timeout_us ) = 0;
+            virtual void wait( const promise_base::ptr& p, const system_clock::time_point& timeout ) = 0;
             virtual void notify( const promise_base::ptr& p ) = 0;
    };
    priority current_priority();
@@ -165,6 +166,7 @@ namespace boost { namespace cmt {
 
 
             void wait( const promise_base::ptr& p, const microseconds& timeout_us );
+            void wait( const promise_base::ptr& p, const system_clock::time_point& timeout );
             void notify( const promise_base::ptr& p );
             void exec_fiber();
 

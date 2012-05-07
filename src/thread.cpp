@@ -13,7 +13,7 @@
 namespace boost { namespace cmt {
     using boost::chrono::system_clock;
 
-    boost::system_time to_system_time( const system_clock::time_point& t ) {
+    boost::posix_time::ptime to_system_time( const system_clock::time_point& t ) {
         typedef boost::chrono::microseconds duration_t;
         typedef duration_t::rep rep_t;
         rep_t d = boost::chrono::duration_cast<duration_t>(t.time_since_epoch()).count();
@@ -298,15 +298,19 @@ namespace boost { namespace cmt {
         sleep_until( system_clock::now() + microseconds(timeout_us) );
     }
 
-    void thread::wait( const promise_base::ptr& p, const boost::chrono::microseconds& timeout_us ) {
+    void thread::wait( const promise_base::ptr& p, const system_clock::time_point& timeout ) {
         BOOST_ASSERT( &current() == this );
         BOOST_ASSERT(my->current);
 
         if( p->ready() )
             return;
 
-        if( timeout_us != microseconds::max() ) {
-            my->current->resume_time = system_clock::now() + timeout_us;
+        if( timeout < system_clock::now() ) {
+          BOOST_THROW_EXCEPTION( cmt::error::future_wait_timeout() );
+        }
+
+        if( timeout != system_clock::time_point::max() ) {
+            my->current->resume_time = timeout;
             //slog( "%p blocked on promise %p", my->current, p.get() );
             my->current->prom = p.get();
             my->sleep_pqueue.push_back(my->current);
@@ -327,6 +331,10 @@ namespace boost { namespace cmt {
         if( my->current->canceled ) {
           BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
         }
+    }
+    void thread::wait( const promise_base::ptr& p, const boost::chrono::microseconds& timeout_us ) {
+       if( timeout_us == microseconds::max() ) wait( p, system_clock::time_point::max() ); 
+       else wait( p, system_clock::now() + timeout_us );
     }
 
     void thread::notify( const promise_base::ptr& p ) {

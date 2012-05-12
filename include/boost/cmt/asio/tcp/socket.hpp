@@ -7,6 +7,9 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
 
     /**
      *  Provides a buffered socket based on boost::asio.  
+     *
+     *  Read buffer grabs what ever is available from ASIO when it
+     *  is empty.  This makes small synchronous reads much more effecient.
      */
     class socket  : public boost::asio::ip::tcp::socket {
         public:

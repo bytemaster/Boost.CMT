@@ -22,19 +22,53 @@ namespace boost { namespace cmt {
     }
 
 
-    namespace bc = boost::contexts;
-    struct cmt_context : public bc::context< bc::protected_stack > {
+    namespace bc = boost::ctx;
+
+
+    struct cmt_context  {
         typedef cmt_context* ptr;
         template<typename Func>
-        cmt_context( Func f, BOOST_RV_REF(bc::protected_stack) s, bool a, bool b )
-        :bc::context<>( boost::interprocess::move(f), boost::interprocess::move(s),a,b),next_blocked(0),next(0),prom(0),canceled(false){
+        cmt_context( Func f, bc::stack_allocator& alloc )
+        :func(f),next_blocked(0),next(0),prom(0),canceled(false),m_complete(false){
+          my_context.fc_stack.base = alloc.allocate( ctx::minimum_stacksize() );
+          my_context.fc_stack.limit = 
+            static_cast<char*>( my_context.fc_stack.base) - bc::minimum_stacksize();
+          make_fcontext( &my_context, &cmt_context::go );
         }
 
+        bc::fcontext_t      my_context;
+        bc::fcontext_t      caller_context;
+
         cmt_context()
-        :bc::context<>(),next_blocked(0),next(0),prom(0),canceled(false){
+        :next_blocked(0),next(0),prom(0),canceled(false),m_complete(false){
+          
+        }
+
+        void resume() {
+          // switch to this ctx;
+          bc::jump_fcontext( &caller_context, &my_context, (intptr_t)this );
+        }
+        void suspend() {
+          bc::jump_fcontext( &my_context, &caller_context, 0 );
+          // switch back to caller...
         }
 
         ~cmt_context() { }
+
+        static void go( intptr_t p ) {
+          cmt_context* c = (cmt_context*)(p);
+          do {
+            c->m_complete = false;
+            cmt_context* c = (cmt_context*)p;
+            c->func();
+            c->m_complete = true;
+            c->suspend(); // switch back to caller of resume
+          } while ( true ); // if resume is called again, start from begining
+        }
+        bool is_complete()const { return m_complete; }
+        bool m_complete;
+
+        boost::function<void()>  func;
 
         priority                 prio;
         promise_base*            prom; 
@@ -61,7 +95,7 @@ namespace boost { namespace cmt {
              task_in_queue(0),
              done(false)
             { name = ""; }
-
+           bc::stack_allocator              stack_alloc;
            boost::mutex                     task_ready_mutex;
            boost::condition_variable        task_ready;
 
@@ -474,7 +508,7 @@ namespace boost { namespace cmt {
        //         wlog( "creating new context %1%", ++ctx_count );
                 // create a new coro if there are no ready tasks
                 cmt_context* new_context = new cmt_context( boost::bind(&thread::exec_fiber,this), 
-                                                 bc::protected_stack( bc::stack_helper::default_stacksize() ), true, true );
+                                                            my->stack_alloc );
                 my->current = new_context;
       //          slog( "resume %1%", my->current );
                 my->current->resume(); 

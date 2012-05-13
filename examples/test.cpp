@@ -7,12 +7,7 @@
 
 using namespace boost::cmt;
 
-namespace bc = boost::contexts;
-typedef bc::context<> context_t;
 
-context_t* a;
-context_t* b;
-context_t* c;
 
 boost::signal<void(std::string)> test_signal;
 
@@ -59,7 +54,7 @@ void main2() {
 }
 
 void bench() {
-  //  async<void_t>(delay).wait();
+    async<void_t>(delay).wait();
     uint64_t cnt = 1000000;
     //uint64_t cnt = 10;
     wlog( "done waiting on delay" );
@@ -140,6 +135,8 @@ void bench() {
     }
     stop = boost::posix_time::microsec_clock::universal_time();
     slog( "%1% calls/sec", ((group_size*cnt*1.0)/((stop-start).total_microseconds()/1000000.0)) );
+
+    slog( "done" );
 }
 
 int main( int argc, char** argv )
@@ -157,9 +154,9 @@ int main( int argc, char** argv )
     c->resume();
     slog( "done" );
     */
-    slog( "test usleep 1s" );
+//    slog( "test usleep 1s" );
 //    boost::cmt::thread::current().usleep(1000000);
-    slog( "done usleep 1s" );
+//    slog( "done usleep 1s" );
 //    bench();
     async(bench);
    // async(main2);

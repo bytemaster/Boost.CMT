@@ -24,12 +24,15 @@ namespace boost { namespace cmt {
 
     namespace bc = boost::ctx;
 
-
+    
+    /**
+     *  Every context holds a pointer to the calling context.  
+     */
     struct cmt_context  {
         typedef cmt_context* ptr;
         template<typename Func>
         cmt_context( Func f, bc::stack_allocator& alloc )
-        :func(f),next_blocked(0),next(0),prom(0),canceled(false),m_complete(false){
+        :func(f),next_blocked(0),next(0),prom(0),canceled(false),m_complete(false),caller_context(0){
           my_context.fc_stack.base = alloc.allocate( ctx::minimum_stacksize() );
           my_context.fc_stack.limit = 
             static_cast<char*>( my_context.fc_stack.base) - bc::minimum_stacksize();
@@ -37,20 +40,24 @@ namespace boost { namespace cmt {
         }
 
         bc::fcontext_t      my_context;
-        bc::fcontext_t      caller_context;
+        cmt_context*        caller_context;
 
         cmt_context()
-        :next_blocked(0),next(0),prom(0),canceled(false),m_complete(false){
+        :next_blocked(0),next(0),prom(0),canceled(false),m_complete(false),caller_context(0){
           
         }
 
-        void resume() {
+        // requires a place to dump the current context
+        void resume( cmt_context& caller ) {
+          caller_context = &caller;
           // switch to this ctx;
-          bc::jump_fcontext( &caller_context, &my_context, (intptr_t)this );
+          bc::jump_fcontext( &caller.my_context, &my_context, (intptr_t)this );
         }
-        void suspend() {
-          bc::jump_fcontext( &my_context, &caller_context, 0 );
+
+        // returns to the context passed to resume
+        void return_to_caller() {
           // switch back to caller...
+          bc::jump_fcontext( &my_context, &caller_context->my_context, 0 );
         }
 
         ~cmt_context() { }
@@ -62,7 +69,7 @@ namespace boost { namespace cmt {
             cmt_context* c = (cmt_context*)p;
             c->func();
             c->m_complete = true;
-            c->suspend(); // switch back to caller of resume
+            c->return_to_caller(); // switch back to caller of resume
           } while ( true ); // if resume is called again, start from begining
         }
         bool is_complete()const { return m_complete; }
@@ -86,8 +93,8 @@ namespace boost { namespace cmt {
     class thread_private {
         public:
            boost::thread* boost_thread;
-           thread_private()
-            :boost_thread(0),
+           thread_private(cmt::thread& s)
+            :self(s), boost_thread(0),
              current(0),
              ready_head(0),
              ready_tail(0),
@@ -104,6 +111,7 @@ namespace boost { namespace cmt {
            std::vector<task*>               task_sch_queue;
            std::vector<cmt_context*>        sleep_pqueue;
 
+           cmt::thread&             self;
            bool                      done;
 
            const char*               name;
@@ -115,6 +123,40 @@ namespace boost { namespace cmt {
 
            system_clock::time_point  check_for_timeouts();
 
+          
+           /**
+            *   Yields the current thread maintaing all
+            *   invariants around the current context.
+            */
+           void yield() {
+              if( !current ) {
+                  current = new cmt_context();
+              }
+              if( !current->caller_context ) {
+                  cmt_context* new_context = new cmt_context( boost::bind(&thread::exec_fiber,&self), 
+                                                                stack_alloc );
+                  start( *new_context );
+                  return;
+              }
+              //slog( "yield to %1% from %2%", current->caller_context, current );
+              cmt_context* prev = current;
+              current = 0;
+              prev->return_to_caller();
+              current = prev;
+              //slog( "yield back to %1% from %2%", current, current->caller_context );
+           }
+
+           void start( cmt_context& c ) {
+              //slog( "start %1%  from %2%", &c, current );
+              BOOST_ASSERT( &c != current );
+              cmt_context* prev = current;
+              current = &c;
+              c.resume(*prev);
+              current = prev;
+              //slog( "return to %1% from %2%", prev, &c );
+           }
+
+
            cmt_context::ptr ready_pop_front() {
                 cmt_context::ptr tmp = 0;
                 if( ready_head ) {
@@ -124,11 +166,11 @@ namespace boost { namespace cmt {
                         ready_tail = 0;
                     tmp->next = 0;
                 }
-                //slog( "ready pop back %1%", tmp );
+                //slog( "ready pop front %1%", tmp );
                 return tmp;
            }
            void ready_push_front( const cmt_context::ptr& c ) {
-                //slog( "ready push back %1%", c );
+                //slog( "ready push front %1%", c );
                 c->next = ready_head;
                 ready_head = c;
                 if( !ready_tail ) 
@@ -268,18 +310,20 @@ namespace boost { namespace cmt {
     }
 
     thread* thread::create( const char* n ) {
-        if( current().my->current ) {
+        //if( current().my->current ) {
           promise<thread*>::ptr p(new promise<thread*>());
           boost::thread* t = new boost::thread( boost::bind(start_thread,p,n) );
           cmt::thread* ct = p->wait();
           ct->set_boost_thread(t);
           return ct;
+          /*
         }
         promise<thread*>::ptr p(new blocking_promise<thread*>());
         boost::thread* t = new boost::thread( boost::bind(start_thread,p,n) );
         cmt::thread* ct = p->wait();
         ct->set_boost_thread(t);
         return ct;
+        */
     }
 
     void thread::set_boost_thread( boost::thread* t ) {
@@ -292,7 +336,7 @@ namespace boost { namespace cmt {
     }
 
     thread::thread() {
-        my = new thread_private();
+        my = new thread_private(*this);
     }
 
     thread::~thread() {
@@ -305,7 +349,11 @@ namespace boost { namespace cmt {
         }
         //slog( "usleep %1%", timeout_us );
         BOOST_ASSERT( &current() == this );
-        BOOST_ASSERT(my->current);
+        //BOOST_ASSERT(my->current);
+
+        if( !my->current ) {
+          my->current = new cmt_context();
+        }
 
         my->current->resume_time = tp;
         my->current->prom = 0;
@@ -314,11 +362,8 @@ namespace boost { namespace cmt {
         std::push_heap( my->sleep_pqueue.begin(),
                         my->sleep_pqueue.end(), sleep_priority_less()   );
 
-        cmt_context*  prev = my->current;
-        my->current = 0;
-        //slog( "prev = %1%", prev );
-        prev->suspend();
-        my->current = prev;
+        my->yield();
+
         my->current->resume_time = system_clock::time_point::max();
         my->current->prom = 0;
         if( my->current->canceled ) {
@@ -328,19 +373,25 @@ namespace boost { namespace cmt {
     void thread::usleep( uint64_t timeout_us ) {
         //slog( "usleep %1%", timeout_us );
         BOOST_ASSERT( &current() == this );
-        BOOST_ASSERT(my->current);
+        //BOOST_ASSERT(my->current);
         sleep_until( system_clock::now() + microseconds(timeout_us) );
     }
 
     void thread::wait( const promise_base::ptr& p, const system_clock::time_point& timeout ) {
         BOOST_ASSERT( &current() == this );
-        BOOST_ASSERT(my->current);
+
+        //BOOST_ASSERT(my->current);
 
         if( p->ready() )
             return;
 
         if( timeout < system_clock::now() ) {
           BOOST_THROW_EXCEPTION( cmt::error::future_wait_timeout() );
+        }
+        
+        if( !my->current ) {
+          my->current = new cmt_context();
+          wlog( "current is null... creating new %1%", my->current );
         }
 
         if( timeout != system_clock::time_point::max() ) {
@@ -352,16 +403,15 @@ namespace boost { namespace cmt {
                             my->sleep_pqueue.end(), sleep_priority_less()   );
         }
 
-        cmt_context* tmp = my->current;
-        my->current = NULL;
 
-        tmp->prom         = p.get();
-        tmp->next_blocked = my->blocked;
-        my->blocked = tmp;
-        //slog( "tmp -> suspend %1%", tmp );
-        tmp->suspend();
+        my->current->prom         = p.get();
+        my->current->next_blocked = my->blocked;
+        my->blocked = my->current;
+
+        my->yield();
+
         //slog( "cur %p-> prom %p = 0", tmp, tmp->prom ); 
-        tmp->prom = 0;
+        my->current->prom = 0;
         if( my->current->canceled ) {
           BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );
         }
@@ -392,7 +442,7 @@ namespace boost { namespace cmt {
                 //slog( "unblock c %1%", cur_blocked );
                 cur_blocked->next_blocked = 0;
                 //cur_blocked->prom         = 0;
-      //          slog( "ready push front %1%", cur_blocked);
+                //slog( "ready push front %1% blocked...", cur_blocked);
                 my->ready_push_front( cur_blocked );
 
                 // I use to set this to 0 to stop, by don't know why
@@ -418,20 +468,23 @@ namespace boost { namespace cmt {
 
     void thread::exec_fiber( ){
 //      static int  exec_fiber = 0;
-//      slog( "%1%", ++exec_fiber );
+//      slog( "%1%", ++exec_fiber );  
+//      slog( "current %1%", my->current );
       try {
-        BOOST_ASSERT( my->current );
+   //     BOOST_ASSERT( my->current );
         while( true ) {
             while( my->ready_head  ) {
-                cmt_context* cur  = my->current;
+                //cmt_context* prev  = my->current;
                 cmt_context* next = my->ready_pop_front();
-                my->current = next;
-                BOOST_ASSERT( next != cur );
-                next->resume();
 
+                my->start(*next);
+
+                //my->current = next;
+                //slog( "prev %1%  next %2%", prev, next );
+                //BOOST_ASSERT( next != prev );
+                //next->resume(*prev);
                 //BOOST_ASSERT( !next->is_complete() );
-
-                my->current = cur;
+                //my->current = prev;
                 //slog( "pre cft cur %1%", my->current );
                 my->check_for_timeouts();
                 //slog( "post cft cur %1%", my->current );
@@ -486,18 +539,28 @@ namespace boost { namespace cmt {
     void thread::exec() {
         int ctx_count = 0;
         if( !my->current ) {
+            my->current = new cmt_context();
             while( true /*!my->done*/ ) {
                 // run ready tasks
                 while( my->ready_head ) {
+                   // cmt_context* prev = my->current;
                     cmt_context* next = my->ready_pop_front();
-                    my->current = next;
+                   // my->current = next;
                 //slog( "resume %1%", next );
-                    next->resume();
+
+                    //if( prev->caller_context ) {
+                     //   next->resume(*prev);
+                  //  } else {
+                   //   BOOST_ASSERT( prev->caller_context );
+                   // }
+                   my->start( *next );
+
                     if( next->is_complete() ) {
                       // elog( "next complete!!" ); 
                        delete next;
                     }
-                    my->current = 0;
+                    //my->current = prev;
+                    //slog( "my->current = %1%", prev );
                     my->check_for_timeouts();
                 }
                 if( !my->blocked && my->done ) { 
@@ -509,16 +572,22 @@ namespace boost { namespace cmt {
                 // create a new coro if there are no ready tasks
                 cmt_context* new_context = new cmt_context( boost::bind(&thread::exec_fiber,this), 
                                                             my->stack_alloc );
-                my->current = new_context;
+                my->start(*new_context);
+
+             //   cmt_context* prev = my->current;
+              //  my->current = new_context;
+          //      if( !cur_context ) 
+          //          cur_context = new cmt_context();
       //          slog( "resume %1%", my->current );
-                my->current->resume(); 
-                if( my->current ) {
-                    delete my->current;
+             //   my->current->resume(*prev); 
+             //   my->current = prev;
+//              if( my->current ) {
+ //                   delete my->current;
      //               wlog( "deleting new context %1%", --ctx_count );
-                }else {
+         //       }else {
     //              elog( "NO CURRENT WHEN RETURN!!???" );
-                }
-                my->current = 0;
+         //       }
+    //            my->current = 0;
             }
         } else {
           exec_fiber();
@@ -547,8 +616,8 @@ namespace boost { namespace cmt {
         if( my->current ) {
             cmt_context*  prev = my->current;
             my->ready_push_back(my->current);
-            my->current = 0;
-            my->ready_tail->suspend();
+ // ???           my->current = 0;
+            my->ready_tail->return_to_caller();
             my->current = prev;
             if( my->current->canceled ) {
               BOOST_THROW_EXCEPTION( cmt::error::task_canceled() );

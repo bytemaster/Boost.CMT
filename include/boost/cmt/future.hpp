@@ -133,7 +133,7 @@ namespace boost { namespace cmt {
             boost::optional<T>      m_value;
     };
 
-
+#if 0
     /**
      * @class blocking_promise 
      * @brief Blocks calling thread until value is received.
@@ -200,14 +200,16 @@ namespace boost { namespace cmt {
             mutable boost::condition_variable   value_ready;
     };
 
-
+#endif
 
 
     template<>
     class promise<void> : public promise<void_t> {};
 
+#if 0
     template<>
     class blocking_promise<void> : public blocking_promise<void_t> {};
+#endif 
 
     /**
      * @brief placeholder for the result of an asynchronous operation.

@@ -55,16 +55,10 @@ namespace boost { namespace cmt {
              */
             template<typename T>
             future<T> schedule( const boost::function<T()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n= "" ) {
-            //   if( current().is_running() ) {
                    typename promise<T>::ptr p(new promise<T>());
                    task::ptr tsk( new rtask<T>(f,p,when,std::max(current_priority(),prio),n) );
                    async(tsk);
                    return p;
-            //   }
-             //  typename promise<T>::ptr p(new blocking_promise<T>());
-              // task::ptr tsk( new rtask<T>(f,p,std::max(current_priority(),prio),n) );
-             //  async(tsk);
-             //  return p;
             }
             void schedule( const boost::function<void()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n= "" ) {
                    task::ptr tsk( new vtask(f,when,std::max(current_priority(),prio),n) );
@@ -87,66 +81,33 @@ namespace boost { namespace cmt {
              */
             template<typename T>
             future<T> async( const boost::function<T()>& f, priority prio = priority(), const char* n= "" ) {
-            //   if( current().is_running() ) {
                    typename promise<T>::ptr p(new promise<T>());
                    task::ptr tsk( new rtask<T>(f,p,std::max(current_priority(),prio),n) );
                    async(tsk);
                    return p;
-            /*   }
-               typename promise<T>::ptr p(new blocking_promise<T>());
-               task::ptr tsk( new rtask<T>(f,p,std::max(current_priority(),prio),n) );
-               async(tsk);
-               return p;
-               */
             }
             template<typename T>
             T sync( const boost::function<T()>& t, priority prio, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-              // if( current().is_running() ) {
                    stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
                    typename promise<T>::ptr p((promise<T>*)&prom);
                    stack_retainable<rtask<T> > tsk(t,p,(std::max)(current_priority(),prio),n); tsk.retain();
                    async(&tsk);
                    return p->wait(timeout_us);
-              /* }
-               stack_retainable<blocking_promise<T> > prom; prom.retain(); prom.retain();
-               typename promise<T>::ptr p((promise<T>*)&prom);
-               stack_retainable<rtask<T> > tsk(t,p,(std::max)(current_priority(),prio),n); tsk.retain();
-               async(&tsk);
-               return p->wait(timeout_us);
-               */
             }
             template<typename T>
             T sync( const boost::function<T()>& t, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-             //  if( current().is_running() ) {
                    stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
                    typename promise<T>::ptr p((promise<T>*)&prom);
                    stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain();
                    async(&tsk);
                    return p->wait(timeout_us);
-              /* }
-               stack_retainable<blocking_promise<T> > prom; prom.retain(); prom.retain();
-               typename promise<T>::ptr p((promise<T>*)&prom);
-               stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain();
-               async(&tsk);
-               return p->wait(timeout_us);
-               */
             }
             void sync( const boost::function<void()>& t, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-             //  if( current().is_running() ) {
                    stack_retainable<promise<void> > prom; prom.retain(); prom.retain();
                    typename promise<void>::ptr p((promise<void>*)&prom);
                    stack_retainable<rtask<void> > tsk(t,p,current_priority(),n); tsk.retain();
                    async(&tsk);
                    p->wait(timeout_us);
-               //    return; 
-              // }
-              /*
-               stack_retainable<blocking_promise<void> > prom; prom.retain(); prom.retain();
-               typename promise<void>::ptr p((promise<void>*)&prom);
-               stack_retainable<rtask<void> > tsk(t,p,current_priority(),n); tsk.retain();
-               async(&tsk);
-               p->wait(timeout_us);
-               */
             }
 
 
@@ -174,8 +135,6 @@ namespace boost { namespace cmt {
             void wait( const promise_base::ptr& p, const microseconds& timeout_us );
             void wait( const promise_base::ptr& p, const system_clock::time_point& timeout );
             void notify( const promise_base::ptr& p );
-
-            void exec_fiber();
 
         private:
             thread();

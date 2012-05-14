@@ -29,11 +29,8 @@ namespace boost { namespace cmt {
             :when(w),prio(p),next(0),active_context(0),canceled(false){
                 static int64_t global_task_count=0;
                 posted_num = ++global_task_count;
-           //     slog( "new task %1%", posted_num );
             }
-            ~task() {
-           //   slog( "deleting %1%", posted_num );
-            }
+            ~task() { }
 
             virtual void run() = 0;
             /// implemented in thread.cpp

@@ -54,7 +54,9 @@ void main2() {
 }
 
 void bench() {
+  wlog( "waiting async delay" );
     async<void_t>(delay).wait();
+  wlog( "delay returned!" );
     uint64_t cnt = 1000000;
     //uint64_t cnt = 10;
     wlog( "done waiting on delay" );
@@ -141,6 +143,9 @@ void bench() {
 
 int main( int argc, char** argv )
 {
+  bench();
+}
+#if 0
     slog( "%1%", 1.234 );
     try {
     /*
@@ -165,3 +170,5 @@ int main( int argc, char** argv )
         elog( "%1%", boost::diagnostic_information(e) );
     }
 }
+
+#endif

@@ -1,8 +1,8 @@
 /**
  * @file boost/cmt/thread.hpp
  */
-#ifndef BOOST_CMT_HPP
-#define BOOST_CMT_HPP
+#ifndef BOOST_CMT_THREAD_HPP
+#define BOOST_CMT_THREAD_HPP
 #include <vector>
 #include <boost/cmt/task.hpp>
 #include <boost/cmt/retainable.hpp>

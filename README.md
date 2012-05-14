@@ -39,10 +39,11 @@ Boost.CMT can be built by checking out my development repository: https://github
 
 ### Requirements ###
     
- This code has been tested on Mac OS X using gcc 4.5.0 and boost 1.47
+ This code has been tested on Mac OS X using gcc 4.5.3 and boost 1.47
 
- Boost.Context is included.
- Boost.Reflect is required for usign Actiors
+ 1. Boost.Context is included.
+ 2. Boost.Atomic is included.
+ 3. Boost.Reflect is required for using Actors
 
 
 ### Basic Example ###

@@ -7,11 +7,11 @@ on ease of use and staying out of your way.
 
 Some of the key features include:
 
-    1. Lock-free inter-thread communication.  
-    2. Waiting on boost::signal
-    3. Propagation of exceptions to wait() caller.
-    4. Minimial useage of heap, synchronous inter-thread calls do not allocate on heap.
-    5. Actor Paradigmn support via Boost.Reflect's any_ptr<T>
+  1. Lock-free inter-thread communication.  
+  2. Waiting on boost::signal
+  3. Propagation of exceptions to wait() caller.
+  4. Minimial useage of heap, synchronous inter-thread calls do not allocate on heap.
+  5. Actor Paradigmn support via Boost.Reflect's any_ptr<T>
 
 Boost.CMT can be built by checking out my development repository: https://github.com/bytemaster/dev
 
@@ -28,20 +28,21 @@ Boost.CMT can be built by checking out my development repository: https://github
 
 ### Notice ###
 
-    This library is not part of the official Boost C++ library, but
-    is written, to the best of my ability, to follow the best practices
-    established by the Boost community and with the hope of being 
-    considered for inclusion with a future Boost release.
+  This library is not part of the official Boost C++ library, but
+  is written, to the best of my ability, to follow the best practices
+  established by the Boost community and with the hope of being 
+  considered for inclusion with a future Boost release.
 
 ### Warning ###
-    This code is in early alpha phase.  I welcome feedback and help in
-    defining the scope of this library.  
+  This code is in early alpha phase.  I welcome feedback and help in
+  defining the scope of this library.  
 
 ### Requirements ###
     
-    This code has been tested on Mac OS X using gcc 4.5.0 and boost 1.47
+ This code has been tested on Mac OS X using gcc 4.5.0 and boost 1.47
 
-    Boost.Context is included.
+ Boost.Context is included.
+ Boost.Reflect is required for usign Actiors
 
 
 ### Basic Example ###

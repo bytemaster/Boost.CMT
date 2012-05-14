@@ -7,18 +7,18 @@ on ease of use and staying out of your way.
 
 Some of the key features include:
 
-    1) Lock-free inter-thread communication.  
-    2) Waiting on boost::signal
-    3) Propagation of exceptions to wait() caller.
-    4) Minimial useage of heap, synchronous inter-thread calls do not allocate on heap.
-
+    1. Lock-free inter-thread communication.  
+    2. Waiting on boost::signal
+    3. Propagation of exceptions to wait() caller.
+    4. Minimial useage of heap, synchronous inter-thread calls do not allocate on heap.
+    5. Actor Paradigmn support via Boost.Reflect's any_ptr<T>
 
 Boost.CMT can be built by checking out my development repository: https://github.com/bytemaster/dev
 
 ### Installation ## 
 
-    git clone https://github.com/bytemaster/dev
-    cd dev
+    git clone https://github.com/bytemaster/mace
+    cd mace
     git submodule init
     git submodule update
     cmake .
@@ -50,7 +50,7 @@ Boost.CMT can be built by checking out my development repository: https://github
         return world.size(); 
     }
 
-    void bench() {
+    int main( int argc, char** argv ) {
         ptime start = microsec_clock::universal_time();
         int sum = 0;
         for( uint32_t i = 0; i < 1000; ++i ) 
@@ -59,29 +59,19 @@ Boost.CMT can be built by checking out my development repository: https://github
         slog( "%1% calls/sec", (1000.0/((stop-start).total_microseconds()/1000000.0)) );
     }
 
-    int main( int argc, char** argv ) {
-        async( bench );
-        boost::cmt::exec(); 
-    }
-
 ### Signal Example ###
 
     boost::signal<void(std::string)> test_signal;
    
     void delay()
     {
-        boost::cmt::usleep(2000000);
+        cmt::usleep(2000000);
         test_signal("hello world!");
-    }
-
-    void wait_on_signal() {
-        std::string rtn = boost::cmt::wait(test_signal);
     }
 
     int main( int argc, char** argv ) {
          async( delay );
-         async( wait_on_signal );
-         boost::cmt::exec(); 
+         std::cerr<<cmt::wait(test_signal);
     }
 
 

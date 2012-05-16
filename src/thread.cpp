@@ -4,6 +4,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <boost/cmt/log/log.hpp>
 
@@ -110,7 +111,9 @@ namespace boost { namespace cmt {
              blocked(0),
              task_in_queue(0),
              done(false)
-            { name = ""; }
+            { 
+              name = boost::lexical_cast<std::string>(uint64_t(this));
+            }
            bc::stack_allocator              stack_alloc;
            boost::mutex                     task_ready_mutex;
            boost::condition_variable        task_ready;
@@ -122,11 +125,10 @@ namespace boost { namespace cmt {
 
            cmt::thread&             self;
            bool                      done;
-
-           const char*               name;
-           cmt_context*                current;
-           cmt_context*                ready_head;
-           cmt_context*                ready_tail;
+           std::string               name;
+           cmt_context*              current;
+           cmt_context*              ready_head;
+           cmt_context*              ready_tail;
 
            cmt_context*                blocked;
 
@@ -637,7 +639,9 @@ namespace boost { namespace cmt {
         return priority();
     }
 
-    const char* thread::name()const               { return my->name; }
+    const char* thread::name()const               { 
+      return my->name.c_str();
+    }
     void        thread::set_name( const char* n ) { my->name = n;    }
     const char* thread_name() { return thread::current().name(); }
 

@@ -64,7 +64,7 @@ namespace boost { namespace cmt {
                return ( m_error || m_value ); 
             }
 
-            virtual const T& wait(const microseconds& timeout = microseconds::max() ) {
+            virtual const T& wait(const microseconds& timeout = microseconds::max() ){
                 { // lock while we check values
                     boost::unique_lock<mutex> lock( m_mutex );
                     if( m_error ) boost::rethrow_exception(m_error);
@@ -82,7 +82,7 @@ namespace boost { namespace cmt {
                 return *m_value;
             }
 
-            virtual const T& wait_until(const system_clock::time_point& timeout  ) {
+            virtual const T& wait_until(const system_clock::time_point& timeout  ){
                 { // lock while we check values
                     boost::unique_lock<mutex> lock( m_mutex );
                     if( m_error ) boost::rethrow_exception(m_error);
@@ -128,9 +128,9 @@ namespace boost { namespace cmt {
                 notify();
             }
 
-            mutable cmt::mutex      m_mutex;
-            boost::exception_ptr    m_error;
-            boost::optional<T>      m_value;
+            mutable cmt::mutex            m_mutex;
+            mutable boost::exception_ptr  m_error;
+            mutable boost::optional<T>    m_value;
     };
 
 #if 0
@@ -252,17 +252,18 @@ namespace boost { namespace cmt {
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait();
             }
-            const T& wait(const microseconds& timeout = microseconds::max() ) { 
+            const T& wait(const microseconds& timeout = microseconds::max() )const { 
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait(timeout); 
             }
-            const T& wait_until(const system_clock::time_point& timeout ) { 
+            const T& wait_until(const system_clock::time_point& timeout )const { 
                 if( !m_prom ) BOOST_THROW_EXCEPTION( error::null_future() );
                 return m_prom->wait_until(timeout); 
             }
 
+
         private:
-            promise_ptr m_prom;
+            mutable promise_ptr m_prom;
     };
 
     template<>

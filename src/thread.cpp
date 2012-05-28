@@ -222,6 +222,11 @@ namespace boost { namespace cmt {
            bool start_next_task( bool reschedule = false ) {
               check_for_timeouts();
 
+              if( !current ) { 
+                slog( "new cmpt context!" );
+                current = new cmt_context();
+              }
+
               // check to see if any other contexts are ready
               if( ready_head ) { 
                 cmt_context* next = ready_pop_front();
@@ -243,12 +248,12 @@ namespace boost { namespace cmt {
               } else { // all contexts are blocked, create a new context 
                        // that will process posted tasks...
                 if( reschedule ) { 
-                    BOOST_ASSERT(current);
-                    ready_push_back(current);
+                  BOOST_ASSERT(current);
+                  ready_push_back(current);
                 }
 
                 cmt_context* next = new cmt_context( &thread_private::start_process_tasks, stack_alloc );
-               // wlog( "create new context %1%", next );
+                //wlog( "create new context %1%", next );
                 cmt_context* prev = current;
                // slog( "jump from %1% to %2%", prev, next );
                 current = next;
@@ -288,7 +293,7 @@ namespace boost { namespace cmt {
                 }
 
                 if( !blocked && done ) { 
-                  elog( "%1% exit!", current );
+                  //elog( "%1% exit!", current );
                   return;
                 }
 
@@ -305,9 +310,9 @@ namespace boost { namespace cmt {
                   }
                 } else { block_wait = true; }
 
-                if( block_wait ) {
-               //   wlog( "%2% no task to run, block until task posted or %1%", 
-               //                 timeout_time - system_clock::now(), current );
+                if( block_wait  ) {
+                  //wlog( "%2% no task to run, block until task posted or %1%", 
+                  //              timeout_time - system_clock::now(), current );
                   boost::unique_lock<boost::mutex> lock(task_ready_mutex);
                   if( !(next = dequeue())) {
                     if( timeout_time == system_clock::time_point::max() ) {
@@ -464,7 +469,6 @@ namespace boost { namespace cmt {
             BOOST_THROW_EXCEPTION( cmt::error::future_wait_timeout() );
         
         if( !my->current ) { 
-          slog( "new cmt context becaure current is 0" );
           my->current = new cmt_context(); 
         }
 
@@ -579,9 +583,9 @@ namespace boost { namespace cmt {
         if( &current() != this ) {
             async<void>( boost::bind( &thread::quit, this ) ).wait();
             if( my->boost_thread ) {
-              slog("%2% joining thread... %1%", this->name(), current().name() );
+              //slog("%2% joining thread... %1%", this->name(), current().name() );
               my->boost_thread->join();
-              wlog( "%2% joined thread %1% !!!", name(), current().name() );
+              //wlog( "%2% joined thread %1% !!!", name(), current().name() );
             }
             return;
         }

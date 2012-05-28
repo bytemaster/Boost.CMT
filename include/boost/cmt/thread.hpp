@@ -98,7 +98,7 @@ namespace boost { namespace cmt {
             T sync( const boost::function<T()>& t, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
                    stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
                    typename promise<T>::ptr p((promise<T>*)&prom);
-                   stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain();
+                   stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain(); tsk.retain();
                    async(&tsk);
                    return p->wait(timeout_us);
             }

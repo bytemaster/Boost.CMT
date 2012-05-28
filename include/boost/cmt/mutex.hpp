@@ -34,13 +34,17 @@ namespace boost{ namespace cmt {
                 while( abs_time > boost::get_system_time() ) {
                    if( try_lock() )
                      return true;
+                   slog( "yield!!\n");
                    yield(); 
+                   wlog( "back from yield!\n");
                 }
                 return false;
             }
             void lock() {
                 while( m_state.exchange(locked, boost::memory_order_acquire)==locked) {
+                   slog( "yield!!\n");
                    yield(); 
+                   wlog( "back from yield!\n");
                 }
             }
             void unlock() {

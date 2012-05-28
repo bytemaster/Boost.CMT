@@ -1,8 +1,8 @@
-#ifndef _BOOST_CMT_ERROR_HPP_
-#define _BOOST_CMT_ERROR_HPP_
+#ifndef _MACE_CMT_ERROR_HPP_
+#define _MACE_CMT_ERROR_HPP_
 #include <boost/exception/all.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
     namespace error {
         struct future_exception : public std::exception, public virtual boost::exception {
             const char*  what()const throw() { return "future exception";     }
@@ -38,6 +38,6 @@ namespace boost { namespace cmt {
             virtual void rethrow()const      { BOOST_THROW_EXCEPTION(*this); }
         };
     } // namespace error
-} } // namespace boost::cmt
+} } // namespace mace::cmt
 
-#endif // _BOOST_CMT_ERROR_HPP_
+#endif // _MACE_CMT_ERROR_HPP_

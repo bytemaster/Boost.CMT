@@ -1,10 +1,10 @@
-#ifndef _BOOST_CMT_SPINLOCK_HPP_
-#define _BOOST_CMT_SPINLOCK_HPP_
+#ifndef _MACE_CMT_SPINLOCK_HPP_
+#define _MACE_CMT_SPINLOCK_HPP_
 #include <boost/atomic.hpp>
 #include <boost/memory_order.hpp>
 #include <boost/thread.hpp>
 
-namespace boost{ namespace cmt {
+namespace mace { namespace cmt {
 
     /**
      *  @class spin_lock
@@ -47,6 +47,6 @@ namespace boost{ namespace cmt {
             boost::atomic<lock_state> m_state;
     };
 
-} } // namespace boost::cmt
+} } // namespace mace::cmt
 
-#endif // _BOOST_CMT_SPINLOCK_HPP_
+#endif // _MACE_CMT_SPINLOCK_HPP_

@@ -1,5 +1,5 @@
-#include <boost/cmt/actor.hpp>
-#include <boost/cmt/log/log.hpp>
+#include <mace/cmt/actor.hpp>
+#include <mace/cmt/log/log.hpp>
 
 
 class calculator {
@@ -11,10 +11,10 @@ class calculator {
     int r;
 };
 
-BOOST_REFLECT_ANY( calculator, (add) )
+MACE_STUB( calculator, (add) )
 
 
-void test( boost::cmt::actor<calculator> act ) {
+void test( mace::cmt::actor<calculator> act ) {
   slog( "start act test" );
   slog( "+5] %1%", (int)act->add( 5 ));
   slog( "+6] %1%", (int)act->add( 6 ).wait() );
@@ -23,12 +23,12 @@ void test( boost::cmt::actor<calculator> act ) {
 
 int main( int argc, char** argv ) {
 
-  boost::cmt::thread* at = boost::cmt::thread::create( "actor_thread" );
-  boost::reflect::any_ptr<calculator> ap( boost::make_shared<calculator>() );
-  boost::cmt::actor<calculator> act( boost::make_shared<calculator>(), at );
-  boost::cmt::actor<calculator> act2(ap, at );
+  mace::cmt::thread* at = mace::cmt::thread::create( "actor_thread" );
+  mace::stub::ptr<calculator> ap( boost::make_shared<calculator>() );
+  mace::cmt::actor<calculator> act( boost::make_shared<calculator>(), at );
+  mace::cmt::actor<calculator> act2(ap, at );
 
-  boost::cmt::thread* tt = boost::cmt::thread::create( "test_thread" );
+  mace::cmt::thread* tt = mace::cmt::thread::create( "test_thread" );
   tt->async<void>( boost::bind(test, act) ).wait();
   tt->async<void>( boost::bind(test, act2) ).wait();
   at->async<void>( boost::bind(test, act2) ).wait();

@@ -1,7 +1,7 @@
-#include <boost/cmt/future.hpp>
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/future.hpp>
+#include <mace/cmt/thread.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
 
     void promise_base::enqueue_thread() {
         m_blocked_thread =&thread::current();
@@ -25,4 +25,4 @@ namespace boost { namespace cmt {
       if( m_task ) m_task->cancel();
     }
 
-} } // namespace boost::cmt
+} } // namespace mace::cmt

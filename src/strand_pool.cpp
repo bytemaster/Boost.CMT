@@ -1,6 +1,6 @@
-#include <boost/cmt/strand_pool.hpp>
+#include <mace/cmt/strand_pool.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
 
   struct waiting_strand{
     waiting_strand( const system_clock::time_point& timeout, const cmt::strand::ptr& s )

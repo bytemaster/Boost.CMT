@@ -1,8 +1,8 @@
-#ifndef _BOOST_CMT_STRAND_HPP_
-#define _BOOST_CMT_STRAND_HPP_
+#ifndef _MACE_CMT_STRAND_HPP_
+#define _MACE_CMT_STRAND_HPP_
 
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
   
   /**
    *  A strand is a logical thread that is multi-plexed on
@@ -78,6 +78,6 @@ namespace boost { namespace cmt {
 
   };
 
-} } // boost::cmt
+} } // mace::cmt
 
-#endif // _BOOST_CMT_STRAND_HPP_
+#endif // _MACE_CMT_STRAND_HPP_

@@ -1,10 +1,10 @@
-#include <boost/cmt/asio/udp/socket.hpp>
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/asio/udp/socket.hpp>
+#include <mace/cmt/thread.hpp>
 #include <boost/bind.hpp>
 
-namespace boost { namespace cmt { namespace asio { namespace udp {
+namespace mace { namespace cmt { namespace asio { namespace udp {
 
-    void rw_handler( boost::cmt::promise<size_t>::ptr p, const boost::system::error_code& ec, size_t s )
+    void rw_handler( mace::cmt::promise<size_t>::ptr p, const boost::system::error_code& ec, size_t s )
     {
         if( !ec )
             p->set_value(s);
@@ -32,4 +32,4 @@ namespace boost { namespace cmt { namespace asio { namespace udp {
         return s.boost::asio::ip::udp::socket::send_to( boost::asio::buffer(data,data_len),  ep );
     }
 
-} } } } // namespace boost::cmt::asio::udp
+} } } } // namespace mace::cmt::asio::udp

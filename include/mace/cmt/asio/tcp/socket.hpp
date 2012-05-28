@@ -1,8 +1,8 @@
-#ifndef _BOOST_CMT_ASIO_TCP_SOCKET_HPP
-#define _BOOST_CMT_ASIO_TCP_SOCKET_HPP
+#ifndef _MACE_CMT_ASIO_TCP_SOCKET_HPP
+#define _MACE_CMT_ASIO_TCP_SOCKET_HPP
 #include <boost/asio.hpp>
 
-namespace boost { namespace cmt { namespace asio { namespace tcp {
+namespace mace { namespace cmt { namespace asio { namespace tcp {
     namespace detail { struct socket; }
 
     /**
@@ -24,7 +24,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
              * Reads one element at a time.
              */
             struct iterator : public std::iterator<std::input_iterator_tag,char,void> {
-                iterator( boost::cmt::asio::tcp::socket* _s = NULL)
+                iterator( mace::cmt::asio::tcp::socket* _s = NULL)
                 :s(_s){ if(_s){++*this;}  }
 
                 inline const char& operator*()const  { return value;  }
@@ -40,7 +40,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
 
                 private:
                     char                           value;
-                    boost::cmt::asio::tcp::socket* s;
+                    mace::cmt::asio::tcp::socket* s;
             };
 
             size_t read_some( char* buffer, size_t size );
@@ -52,6 +52,6 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             detail::socket* my;
     };
 
-} } } } // namespace boost::cmt::asio::tcp
+} } } } // namespace mace::cmt::asio::tcp
 
 #endif

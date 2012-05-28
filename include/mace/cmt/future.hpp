@@ -1,15 +1,15 @@
-#ifndef _BOOST_CMT_FUTURE_HPP
-#define _BOOST_CMT_FUTURE_HPP
-#include <boost/cmt/retainable.hpp>
-#include <boost/cmt/error.hpp>
-#include <boost/cmt/log/log.hpp>
+#ifndef _MACE_CMT_FUTURE_HPP
+#define _MACE_CMT_FUTURE_HPP
+#include <mace/cmt/retainable.hpp>
+#include <mace/cmt/error.hpp>
+#include <mace/cmt/log/log.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/cmt/mutex.hpp>
+#include <mace/cmt/mutex.hpp>
 #include <boost/optional.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread/condition_variable.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
     using boost::chrono::microseconds;
     using boost::chrono::system_clock;
     boost::system_time to_system_time( const boost::chrono::system_clock::time_point& t );
@@ -48,7 +48,7 @@ namespace boost { namespace cmt {
      *  This promise blocks cooperatively until the value is
      *  provided.  It will allow other tasks to run in the
      *  current thread if wait() is called while there is
-     *  a current boost::cmt::thread stack.
+     *  a current mace::cmt::thread stack.
      */
     template<typename T = void_t>
     class promise : public promise_base {
@@ -133,83 +133,10 @@ namespace boost { namespace cmt {
             mutable boost::optional<T>    m_value;
     };
 
-#if 0
-    /**
-     * @class blocking_promise 
-     * @brief Blocks calling thread until value is received.
-     *
-     *  This promise will block the calling thread using a mutex
-     *  and wait condition.  
-     */
-    template<typename T = void_t>
-    class blocking_promise : public promise<T> {
-        public:
-            typedef retainable_ptr<blocking_promise> ptr;
-
-            blocking_promise(){}
-            blocking_promise( const T& v ):promise<T>(v){}
-
-            virtual const T& wait(const microseconds& timeout = microseconds::max() ) {
-                boost::unique_lock<boost::mutex> lock( bmutex );
-                if( this->m_error ) boost::rethrow_exception(this->m_error);
-                if( this->m_value ) return *(this->m_value);
-                if( timeout == microseconds::max() ) {
-                    value_ready.wait( lock );
-                } else {
-                    value_ready.timed_wait( lock, to_system_time(boost::chrono::system_clock::now()+timeout) );
-                }
-                if( this->m_error ) boost::rethrow_exception(this->m_error);
-                if( this->m_value ) return *(this->m_value); 
-                BOOST_THROW_EXCEPTION( boost::cmt::error::future_value_not_ready() ); 
-                return *(this->m_value);
-            }
-
-            virtual const T& wait_until(const system_clock::time_point& timeout ) {
-                boost::unique_lock<boost::mutex> lock( bmutex );
-                if( this->m_error ) boost::rethrow_exception(this->m_error);
-                if( this->m_value ) return *(this->m_value);
-                    value_ready.timed_wait( lock, to_system_time(timeout) );
-                if( this->m_error ) boost::rethrow_exception(this->m_error);
-                if( this->m_value ) return *(this->m_value); 
-                BOOST_THROW_EXCEPTION( boost::cmt::error::future_value_not_ready() ); 
-                return *(this->m_value);
-            }
-
-            virtual void set_exception( const boost::exception_ptr& e ) {
-                boost::unique_lock<boost::mutex> lock( bmutex );
-                this->m_error = e;
-                value_ready.notify_all();
-            }
-            virtual void set_value( const T& v ) {
-                boost::unique_lock<boost::mutex> lock( bmutex );
-                if( this->m_error ) 
-                    return;
-                this->m_value = v;
-                value_ready.notify_all();
-            }
-            
-        private:
-            virtual void set_timeout() {
-                boost::unique_lock<boost::mutex> lock( bmutex );
-                if( this->m_value ) 
-                    return;
-                this->m_error = boost::copy_exception( error::future_wait_timeout() );
-                value_ready.notify_all();
-            }
-            mutable boost::mutex                bmutex;
-            mutable boost::condition_variable   value_ready;
-    };
-
-#endif
-
 
     template<>
     class promise<void> : public promise<void_t> {};
 
-#if 0
-    template<>
-    class blocking_promise<void> : public blocking_promise<void_t> {};
-#endif 
 
     /**
      * @brief placeholder for the result of an asynchronous operation.
@@ -229,8 +156,8 @@ namespace boost { namespace cmt {
      *
      * @section future_auto_convert Automatic waiting on cast.
      *
-     * boost::cmt::future<T> automatically casts to type T when requested.  This cast
-     * is short hand for boost::cmt::future<T>::wait().
+     * mace::cmt::future<T> automatically casts to type T when requested.  This cast
+     * is short hand for mace::cmt::future<T>::wait().
      *  
      */
     template<typename T = void_t>
@@ -275,7 +202,7 @@ namespace boost { namespace cmt {
     };
 
 
-} }
+} } // mace::cmt
 
 
 #endif

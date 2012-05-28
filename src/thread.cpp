@@ -1,17 +1,17 @@
 #include <boost/chrono.hpp>
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/thread.hpp>
 #include <boost/context/all.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <boost/cmt/log/log.hpp>
+#include <mace/cmt/log/log.hpp>
 
 #include <list>
 #include <vector>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
     using boost::chrono::system_clock;
 
     boost::posix_time::ptime to_system_time( const system_clock::time_point& t ) {
@@ -45,7 +45,7 @@ namespace boost { namespace cmt {
           next_blocked(0), next(0),
           prom(0), canceled(false), m_complete(false)
         {
-            my_context.fc_stack.base = alloc.allocate( ctx::minimum_stacksize() );
+            my_context.fc_stack.base = alloc.allocate( bc::minimum_stacksize() );
             my_context.fc_stack.limit = 
               static_cast<char*>( my_context.fc_stack.base) - bc::minimum_stacksize();
             make_fcontext( &my_context, start_func );
@@ -659,5 +659,5 @@ namespace boost { namespace cmt {
       }
     }
 
-} } // namespace boost::cmt 
+} } // namespace mace::cmt 
 

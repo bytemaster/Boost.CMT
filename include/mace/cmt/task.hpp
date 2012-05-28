@@ -1,15 +1,15 @@
-#ifndef BOOST_CMT_TASK_HPP
-#define BOOST_CMT_TASK_HPP
+#ifndef MACE_CMT_TASK_HPP
+#define MACE_CMT_TASK_HPP
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/cmt/error.hpp>
-#include <boost/cmt/retainable.hpp>
-#include <boost/cmt/future.hpp>
-#include <boost/cmt/spin_lock.hpp>
+#include <mace/cmt/error.hpp>
+#include <mace/cmt/retainable.hpp>
+#include <mace/cmt/future.hpp>
+#include <mace/cmt/spin_lock.hpp>
 #include <boost/function.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/cmt/log/log.hpp>
+#include <mace/cmt/log/log.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
     using namespace boost::chrono;
 
      struct cmt_context;
@@ -51,7 +51,7 @@ namespace boost { namespace cmt {
             priority                                prio;
             task*                                   next;
             cmt_context*                            active_context;
-            boost::cmt::spin_lock                   active_context_lock;
+            mace::cmt::spin_lock                    active_context_lock;
     };
 
     template<typename R = void>
@@ -109,60 +109,6 @@ namespace boost { namespace cmt {
             const char*                 m_name;
 
     };
-/*
-    template<typename R = void_t>
-    class reftask : public task {
-        public:
-            reftask( const boost::function<R()>& f, const typename promise<R>::ptr& p, priority prio =priority(), const char* name = "" )
-            :task(prio),m_functor(f),m_prom(p),m_name(name){}
-
-            void cancel() {
-                try {
-                    BOOST_THROW_EXCEPTION( error::task_canceled() );
-                } catch ( ... ) {
-                    m_prom->set_exception(boost::current_exception());
-                }
-            }
-            void run() {
-                try {
-                    m_prom->set_value( m_functor() );
-                } catch( ... ) {
-                    m_prom->set_exception(boost::current_exception());
-                }
-            }
-            const char* name() { return m_name; }
-
-            const char*                 m_name;
-            const boost::function<R()>& m_functor;
-            typename promise<R>::ptr    m_prom;
-    };
-    template<>
-    class reftask<void> : public task {
-            reftask( const boost::function<void()>& f, const  promise<void>::ptr& p, priority prio=priority(),const char* name = "" )
-            :task(prio),m_functor(f),m_prom(p),m_name(name){}
-
-            void cancel() {
-                try {
-                    BOOST_THROW_EXCEPTION( error::task_canceled() );
-                } catch ( ... ) {
-                    m_prom->set_exception(boost::current_exception());
-                }
-            }
-            void run() {
-                try {
-                    m_functor();
-                    m_prom->set_value( void_t());
-                } catch( ... ) {
-                    m_prom->set_exception(boost::current_exception());
-                }
-            }
-            const char* name() { return m_name; }
-
-            const boost::function<void()>& m_functor;
-            promise<void>::ptr              m_prom;
-            const char*                    m_name;
-    };
-    */
 
 
     class vtask : public task {
@@ -191,6 +137,6 @@ namespace boost { namespace cmt {
         const char*             m_name;
     };
 
-} } // namespace boost cmt
+} } // namespace mace::cmt
 
-#endif // BOOST_CMT_TASK_HPP
+#endif // MACE_CMT_TASK_HPP

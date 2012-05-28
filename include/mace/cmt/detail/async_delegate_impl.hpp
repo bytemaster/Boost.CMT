@@ -18,7 +18,7 @@
 #        endif
 
 
-namespace boost {
+namespace mace { namespace cmt {
 namespace detail {
     
 /// @cond INTERNAL_DEV
@@ -41,7 +41,8 @@ namespace detail {
         #undef PARAM_NAME
         #undef PARAM_ARG
 } // detail 
-} // boost
+} // cmt 
+} // mace
 
 #   endif // CMT_DELEGATE_IMPL_HPP_INCLUDED
 
@@ -53,24 +54,20 @@ namespace detail {
 #define PARAM_ARGS      BOOST_PP_ENUM(n,PARAM_ARG,A) // TYPE_N name_N
 
 template<typename Signature>
-class async_delegate_impl<n, Signature >
-{
-    public:
-        typedef boost::function_traits<Signature>  traits;
-        future<typename traits::result_type> operator()(PARAM_ARGS) 
-        { 
-            return m_thr.async<typename traits::result_type>( boost::bind(m_del,PARAM_NAMES) );
-        }
+class async_delegate_impl<n, Signature > {
+  public:
+    typedef boost::function_traits<Signature>  traits;
+    future<typename traits::result_type> operator()(PARAM_ARGS) { 
+      return m_thr.async<typename traits::result_type>( boost::bind(m_del,PARAM_NAMES) );
+    }
 
-        template<typename Functor>
-        async_delegate_impl( Functor f, thread& t )
-        :m_del(f),m_thr(t)
-        { 
-        }
+    template<typename Functor>
+    async_delegate_impl( Functor f, thread& t )
+    :m_del(f),m_thr(t) { }
 
-    private:
-        boost::function<Signature> m_del;
-        thread&                    m_thr;
+  private:
+    boost::function<Signature> m_del;
+    thread&                    m_thr;
 };
 
 

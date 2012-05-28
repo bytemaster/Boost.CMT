@@ -1,16 +1,16 @@
 /**
- *  @file boost/cmt/asio.hpp
+ *  @file mace/cmt/asio.hpp
  *  @brief defines wrappers for boost::asio functions
  */
-#ifndef _BOOST_CMT_ASIO_HPP_
-#define _BOOST_CMT_ASIO_HPP_
+#ifndef _MACE_CMT_ASIO_HPP_
+#define _MACE_CMT_ASIO_HPP_
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
-#include <boost/cmt/future.hpp>
+#include <mace/cmt/future.hpp>
 
-namespace boost { namespace cmt { namespace asio {
+namespace mace { namespace cmt { namespace asio {
     namespace detail {
-        using namespace boost::cmt;
+        using namespace mace::cmt;
 
         void read_write_handler( const promise<size_t>::ptr& p, 
                                  const boost::system::error_code& ec, 
@@ -43,7 +43,7 @@ namespace boost { namespace cmt { namespace asio {
         }
     }
     /**
-     * @return the default boost::asio::io_service for use with boost::cmt::asio
+     * @return the default boost::asio::io_service for use with mace::cmt::asio
      * 
      * This IO service is automatically running in its own thread to service asynchronous
      * requests without blocking any other threads.
@@ -100,7 +100,7 @@ namespace boost { namespace cmt { namespace asio {
         template<typename SocketType, typename AcceptorType>
         boost::system::error_code accept( AcceptorType& acc, SocketType& sock, const microseconds& timeout_us = microseconds::max() ) {
             promise<boost::system::error_code>::ptr p( new promise<boost::system::error_code>() );
-            acc.async_accept( sock, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
+            acc.async_accept( sock, boost::bind( mace::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait( timeout_us );
         }
 
@@ -108,7 +108,7 @@ namespace boost { namespace cmt { namespace asio {
         template<typename AsyncSocket, typename EndpointType>
         boost::system::error_code connect( AsyncSocket& sock, const EndpointType& ep, const microseconds& timeout_us = microseconds::max() ) {
             promise<boost::system::error_code>::ptr p(new promise<boost::system::error_code>());
-            sock.async_connect( ep, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
+            sock.async_connect( ep, boost::bind( mace::cmt::asio::detail::error_handler, p, _1 ) );
             return p->wait(timeout_us);
         }
 
@@ -123,6 +123,6 @@ namespace boost { namespace cmt { namespace asio {
     }
 
 
-} } } // namespace boost::cmt::asio
+} } } // namespace mace::cmt::asio
 
 #endif // _BOOST_CMT_ASIO_HPP_

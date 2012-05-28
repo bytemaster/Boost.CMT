@@ -1,14 +1,14 @@
-#include <boost/cmt/asio/tcp/socket.hpp>
-#include <boost/cmt/asio.hpp>
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/asio/tcp/socket.hpp>
+#include <mace/cmt/asio.hpp>
+#include <mace/cmt/thread.hpp>
 #include <boost/array.hpp>
 
 
-namespace boost { namespace cmt { namespace asio { namespace tcp {
+namespace mace { namespace cmt { namespace asio { namespace tcp {
 
     namespace detail {
         struct socket {
-            socket( boost::cmt::asio::tcp::socket& s )
+            socket( mace::cmt::asio::tcp::socket& s )
             :self(s),
              read_buf(0),cur_write_buf(NULL), cur_wbuf_idx(0), read_pos(0),last_avail(0)
             {}
@@ -19,7 +19,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             inline size_t read( char* buffer, size_t size );
             inline size_t write( const char* buffer, size_t size );
 
-            boost::cmt::asio::tcp::socket& self;
+            mace::cmt::asio::tcp::socket& self;
 
             std::vector<char>   read_buf;
             std::vector<char>   write_buf[2];
@@ -29,12 +29,12 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             size_t            read_pos;
             size_t            last_avail;
 
-            boost::cmt::future<void> write_complete;
+            mace::cmt::future<void> write_complete;
         };
     }
   
     socket::socket()
-    :boost::asio::ip::tcp::socket( boost::cmt::asio::default_io_service() ) {
+    :boost::asio::ip::tcp::socket( mace::cmt::asio::default_io_service() ) {
         my = new detail::socket(*this);
     }
     
@@ -50,7 +50,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
 
 
     boost::system::error_code socket::connect( const boost::asio::ip::tcp::endpoint& ep ) {
-        return boost::cmt::asio::tcp::connect( *this, ep );
+        return mace::cmt::asio::tcp::connect( *this, ep );
     }
 
     inline size_t detail::socket::read_some( char* buf, size_t size ) {
@@ -87,7 +87,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         }
 
         // perform an async operation to read the rest 
-        return boost::cmt::asio::read_some( self, boost::asio::buffer(buf,size) );
+        return mace::cmt::asio::read_some( self, boost::asio::buffer(buf,size) );
     }
     size_t socket::read_some( char* buf, size_t size ) {
         return my->read_some(buf,size);
@@ -124,7 +124,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
             return r + size;
                 
         }
-        return r + boost::cmt::asio::read( self, boost::asio::buffer(buf,size) );
+        return r + mace::cmt::asio::read( self, boost::asio::buffer(buf,size) );
     }
     size_t socket::read( char* buf, size_t size ) {
         return my->read(buf,size);
@@ -154,7 +154,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         size_t      size   = write_buf[write_buf_idx].size();
 
         do {
-            size_t wrote = boost::cmt::asio::write(self,boost::asio::buffer(buffer, size - total_wrote) );
+            size_t wrote = mace::cmt::asio::write(self,boost::asio::buffer(buffer, size - total_wrote) );
             r += wrote;
             buffer += wrote;
             total_wrote += wrote;
@@ -191,7 +191,7 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
       memcpy( &(*cur_write_buf)[wpos], buffer, size );
 
       if( first ) {
-        write_complete = boost::cmt::async<void>( boost::bind( &socket::write_loop, this, cur_wbuf_idx ) );
+        write_complete = mace::cmt::async<void>( boost::bind( &socket::write_loop, this, cur_wbuf_idx ) );
         cur_wbuf_idx = (cur_wbuf_idx+1)&0x01;
         cur_write_buf = &write_buf[cur_wbuf_idx];
       }
@@ -212,4 +212,4 @@ namespace boost { namespace cmt { namespace asio { namespace tcp {
         my->write_complete.wait();
     }
 
-} } } }  // namespace boost::cmt::asio::tcp
+} } } }  // namespace mace::cmt::asio::tcp

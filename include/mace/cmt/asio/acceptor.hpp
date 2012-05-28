@@ -1,10 +1,10 @@
-#ifndef _BOOST_RPC_DETAIL_SERVER_BASE_HPP_
-#define _BOOST_RPC_DETAIL_SERVER_BASE_HPP_
+#ifndef _MACE_ASIO_ACCEPTOR_HPP
+#define _MACE_ASIO_ACCEPTOR_HPP
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/function.hpp>
 
-namespace boost { namespace cmt {  namespace asio {
+namespace mace { namespace cmt {  namespace asio {
     typedef boost::asio::ip::tcp::socket  tcp_socket;
     typedef boost::shared_ptr<tcp_socket> tcp_socket_ptr;
 
@@ -37,6 +37,6 @@ namespace boost { namespace cmt {  namespace asio {
             class acceptor_private* my;
     };
 
-} } } // boost::cmt::asio
+} } } // mace::cmt::asio
 
-#endif // _BOOST_RPC_DETAIL_SERVER_BASE_HPP_
+#endif // _MACE_ASIO_ACCEPTOR_HPP

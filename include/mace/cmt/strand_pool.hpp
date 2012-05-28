@@ -1,7 +1,7 @@
 #ifndef _STRAND_POOL_HPP_
 #define _STRAND_POOL_HPP_
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
 
     /**
      *  The strand_pool creates a small number of OS threads

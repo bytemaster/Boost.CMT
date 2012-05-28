@@ -1,11 +1,11 @@
-#ifndef _BOOST_CMT_RETAINABLE_HPP_
-#define _BOOST_CMT_RETAINABLE_HPP_
+#ifndef _MACE_CMT_RETAINABLE_HPP_
+#define _MACE_CMT_RETAINABLE_HPP_
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/atomic.hpp>
 #include <boost/memory_order.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
 
 /**
  *  Allows an instance of retainable type T to be allocated on
@@ -168,6 +168,6 @@ inline retainable_ptr<T> static_retainable_cast( const retainable_ptr<U>& u ) {
     return retainable_ptr<T>( t );
 }
 
-} } // namespace boost::cmt
+} } // namespace mace::cmt
 
 #endif

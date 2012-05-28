@@ -3,6 +3,7 @@ include_directories( include )
 include_directories( ../context/include )
 include_directories( ../atomic/include )
 include_directories( ../reflect/include )
+include_directories( ../stub/include )
 
 SET( sources 
             src/future.cpp

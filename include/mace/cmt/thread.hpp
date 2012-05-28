@@ -1,14 +1,14 @@
 /**
- * @file boost/cmt/thread.hpp
+ * @file mace/cmt/thread.hpp
  */
-#ifndef BOOST_CMT_THREAD_HPP
-#define BOOST_CMT_THREAD_HPP
+#ifndef MACE_CMT_THREAD_HPP
+#define MACE_CMT_THREAD_HPP
 #include <vector>
-#include <boost/cmt/task.hpp>
-#include <boost/cmt/retainable.hpp>
+#include <mace/cmt/task.hpp>
+#include <mace/cmt/retainable.hpp>
 #include <boost/chrono.hpp>
 
-namespace boost { namespace cmt {
+namespace mace { namespace cmt {
    using boost::chrono::microseconds;
    using boost::chrono::system_clock;
 
@@ -47,7 +47,7 @@ namespace boost { namespace cmt {
              *  called from a thread running exec() then it will block 'cooperatively' and allow
              *  other tasks to run in that thread until this thread has returned a result.
              *
-             *  @note Calling boost::cmt::async(...).wait() in a thread before calling exec will
+             *  @note Calling mace::cmt::async(...).wait() in a thread before calling exec will
              *  block that thread forever because the thread will not get a chance to process
              *  the call before blocking the thread.
              *
@@ -75,7 +75,7 @@ namespace boost { namespace cmt {
              *  called from a thread running exec() then it will block 'cooperatively' and allow
              *  other tasks to run in that thread until this thread has returned a result.
              *
-             *  @note Calling boost::cmt::async(...).wait() in a thread before calling exec will
+             *  @note Calling mace::cmt::async(...).wait() in a thread before calling exec will
              *  block that thread forever because the thread will not get a chance to process
              *  the call before blocking the thread.
              */
@@ -122,9 +122,9 @@ namespace boost { namespace cmt {
             void set_boost_thread( boost::thread* t );
         protected:
             friend struct thread_private;
-            friend void boost::cmt::yield();
-            friend void boost::cmt::usleep( uint64_t );
-            friend void boost::cmt::sleep_until( const system_clock::time_point& );
+            friend void mace::cmt::yield();
+            friend void mace::cmt::usleep( uint64_t );
+            friend void mace::cmt::sleep_until( const system_clock::time_point& );
 
             // these methods may only be called from the current thread
             void yield();
@@ -171,13 +171,13 @@ namespace boost { namespace cmt {
     *   Sleeps the current stack for @param us microseconds.
     */
    inline void usleep( uint64_t us ) {
-        boost::cmt::thread::current().usleep(us);
+        mace::cmt::thread::current().usleep(us);
    }
    inline void sleep_until( const system_clock::time_point& tp ) {
-        boost::cmt::thread::current().sleep_until(tp);
+        mace::cmt::thread::current().sleep_until(tp);
    }
 
    void yield();
-} } // boost::cmt
+} } // mace::cmt
 
-#endif
+#endif // MACE_CMT_THREAD_HPP

@@ -1,8 +1,8 @@
-#include <boost/cmt/asio/acceptor.hpp>
-#include <boost/cmt/asio.hpp>
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/asio/acceptor.hpp>
+#include <mace/cmt/asio.hpp>
+#include <mace/cmt/thread.hpp>
 
-namespace boost { namespace cmt {  namespace asio {
+namespace mace { namespace cmt {  namespace asio {
     class acceptor_private {
         public:
           boost::asio::ip::tcp::acceptor*              acc; 
@@ -24,9 +24,9 @@ namespace boost { namespace cmt {  namespace asio {
           }
 
           tcp_socket_ptr accept( const microseconds& timeout_us = microseconds::max() ) { 
-             tcp_socket_ptr sock( new tcp_socket( boost::cmt::asio::default_io_service() ) );
+             tcp_socket_ptr sock( new tcp_socket( mace::cmt::asio::default_io_service() ) );
              cmt::promise<boost::system::error_code>::ptr p(new cmt::promise<boost::system::error_code>());
-             acc->async_accept( *sock, boost::bind( boost::cmt::asio::detail::error_handler, p, _1 ) );
+             acc->async_accept( *sock, boost::bind( mace::cmt::asio::detail::error_handler, p, _1 ) );
              if( boost::system::error_code ec = p->wait(timeout_us) ) {
                 BOOST_THROW_EXCEPTION( boost::system::system_error(ec) );
              }
@@ -36,7 +36,7 @@ namespace boost { namespace cmt {  namespace asio {
           void_t listen( uint16_t port ) {
             try {
                 if( !acc )
-                    acc = new boost::asio::ip::tcp::acceptor( boost::cmt::asio::default_io_service(), 
+                    acc = new boost::asio::ip::tcp::acceptor( mace::cmt::asio::default_io_service(), 
                                boost::asio::ip::tcp::endpoint( boost::asio::ip::tcp::v4(),port) );
                 while( true ) {
                    try {
@@ -66,4 +66,4 @@ namespace boost { namespace cmt {  namespace asio {
     }
 
 
-} } } // boost::cmt::asio
+} } } // mace::cmt::asio

@@ -1,11 +1,11 @@
-#include <boost/cmt/thread.hpp>
+#include <mace/cmt/thread.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
-#include <boost/cmt/log/log.hpp>
+#include <mace/cmt/log/log.hpp>
 #include <boost/context/all.hpp>
-#include <boost/cmt/signals.hpp>
+#include <mace/cmt/signals.hpp>
 
-using namespace boost::cmt;
+using namespace mace::cmt;
 
 
 
@@ -20,7 +20,7 @@ void bench();
 void_t delay()
 {
     slog( "delay 3 sec, %1%", 3.13);
-    boost::cmt::usleep(3000000);
+    mace::cmt::usleep(3000000);
     slog( "test_signal");
     test_signal("hello world!");
 	return void_t();
@@ -33,10 +33,10 @@ int hello2(int cnt) {
 int hello(int cnt) {
     return cnt;
     slog( "%1%", cnt );    
-    boost::cmt::async<int>( boost::bind(hello2,cnt+10) );
-    boost::cmt::async<int>( boost::bind(hello2,cnt+1000) );
-    boost::cmt::async<int>( boost::bind(hello2,cnt+10000) ).wait();
-    return boost::cmt::sync<int>( boost::bind(hello2,cnt+100) );
+    mace::cmt::async<int>( boost::bind(hello2,cnt+10) );
+    mace::cmt::async<int>( boost::bind(hello2,cnt+1000) );
+    mace::cmt::async<int>( boost::bind(hello2,cnt+10000) ).wait();
+    return mace::cmt::sync<int>( boost::bind(hello2,cnt+100) );
 }
 
 void main2() {
@@ -102,13 +102,13 @@ void bench() {
 
     int group_size = 10;
     cnt/=group_size;
-    std::vector< boost::cmt::future<int> > futures(10);
+    std::vector< mace::cmt::future<int> > futures(10);
     start = boost::posix_time::microsec_clock::universal_time();
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
            // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
            for( uint32_t f = 0; f < group_size; ++f ) {
-            futures[f] = async<int>( boost::bind(hello, i*group_size+f), "hello_func", boost::cmt::priority(f) );//2000000);
+            futures[f] = async<int>( boost::bind(hello, i*group_size+f), "hello_func", mace::cmt::priority(f) );//2000000);
            }
            for( uint32_t f = 0; f < group_size; ++f ) {
             futures[f].wait();
@@ -160,12 +160,12 @@ int main( int argc, char** argv )
     slog( "done" );
     */
 //    slog( "test usleep 1s" );
-//    boost::cmt::thread::current().usleep(1000000);
+//    mace::cmt::thread::current().usleep(1000000);
 //    slog( "done usleep 1s" );
 //    bench();
     async(bench);
    // async(main2);
-    boost::cmt::exec();
+    mace::cmt::exec();
     } catch( const boost::exception& e ) {
         elog( "%1%", boost::diagnostic_information(e) );
     }

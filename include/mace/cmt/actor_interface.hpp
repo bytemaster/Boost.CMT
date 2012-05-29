@@ -10,6 +10,7 @@
   #include <boost/fusion/container/generation/make_vector.hpp>
   #include <boost/fusion/functional/generation/make_fused_function_object.hpp>
   #include <boost/fusion/functional/generation/make_unfused.hpp>
+  #include <boost/typeof/typeof.hpp>
   #include <mace/stub/void.hpp>
   #include <boost/signals.hpp>
   #include <mace/stub/vtable.hpp>
@@ -49,10 +50,11 @@
               set_visitor( VTableType& vt, T& self, actor_base* ab )
               :m_actor(ab),m_self(self),vtbl(vt){}
 
-              template<typename M, typename InterfaceName, M (InterfaceName::*m)>
+              template<typename MemberPtr, MemberPtr m>
               void operator()( const char* name )const {
-                assign<M> a(m_self,vtbl.*m,m_actor);
-                M::template get_member_ptr<T>( a );
+                typedef typename boost::function_types::result_type<MemberPtr>::type member_ref;
+                typedef typename boost::remove_reference<member_ref>::type member;
+                (vtbl.*m).set_delegate( &m_self, member::template get_member_ptr<T>(),m_actor );
               }
             private:
               template<typename Member>
@@ -80,7 +82,7 @@
               set_visitor( VTableType& vt, T& self, actor_base* ab )
               :m_actor(ab), m_self(self),vtbl(vt){}
 
-              template<typename M, typename InterfaceName, M (InterfaceName::*m)>
+              template<typename M, M m>
               void operator()( const char* name )const {
                 assign<M> a(m_self,vtbl.*m, m_actor);
                 M::template get_member_ptr<T>( a );

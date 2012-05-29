@@ -84,7 +84,7 @@ namespace mace { namespace cmt {
     template<>
     class rtask<void> : public task {
         public:
-            rtask( const boost::function<void()>& f, const typename promise<void>::ptr& p, const system_clock::time_point& tp, priority prio, const char* name = "" )
+            rtask( const boost::function<void()>& f, const promise<void>::ptr& p, const system_clock::time_point& tp, priority prio, const char* name = "" )
             :task(prio,tp),m_functor(f),m_prom(p),m_name(name){ m_prom->set_task(this); }
 
             rtask( const boost::function<void()>& f, const  promise<void>::ptr& p, priority prio=priority(), const char* name = "" )

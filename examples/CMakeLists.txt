@@ -2,8 +2,10 @@
 
 SET( libraries 
     #/usr/local/lib/tcmalloc/libtcmalloc.a
-    boost_cmt
+    mace_cmt
     boost_context 
+    pthread
+    rt
     ${Boost_THREAD_LIBRARY} 
     ${Boost_CHRONO_LIBRARY} 
     ${Boost_ASIO_LIBRARY} 

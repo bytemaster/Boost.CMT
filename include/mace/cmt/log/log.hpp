@@ -1,3 +1,7 @@
+/**
+ *  @file mace/cmt/log/log.hpp
+ *  @brief Defines helpful console logging methods.
+ */
 #ifndef _BOOST_RPC_LOG_HPP_
 #define _BOOST_RPC_LOG_HPP_
 #include <boost/format.hpp>
@@ -61,25 +65,36 @@ namespace mace { namespace cmt {
     }
 
 } } } // mace::cmt::detail
-
+/**
+ *  @def dlog
+ */
 #define dlog(...) do {try { mace::cmt::detail::log( std::cerr, CONSOLE_DEFAULT, __FILE__, __LINE__, __func__, __VA_ARGS__ ); } \
                 catch (boost::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (std::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (...) {mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
+/**
+ *  @def slog
+ */
 #define slog(...) do {try {mace::cmt::detail::log( std::cerr, CONSOLE_DEFAULT, __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
                 catch (boost::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (std::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (...) {mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
+/**
+ *  @def elog
+ */
 #define elog(...) do {try {mace::cmt::detail::log( std::cerr, CONSOLE_RED,     __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
                 catch (boost::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (std::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (...) {mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs - exception while formating args" ); }  \
                 }while(false)
 
+/**
+ *  @def wlog
+ */
 #define wlog(...) do {try {mace::cmt::detail::log( std::cerr, CONSOLE_BROWN,   __FILE__, __LINE__, __func__, __VA_ARGS__ ); }\
                 catch (boost::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \
                 catch (std::exception&e){ mace::cmt::detail::log( std::cerr, CONSOLE_RED, __FILE__, __LINE__, __func__, "Invalid logs: %1%", boost::diagnostic_information(e) ); }  \

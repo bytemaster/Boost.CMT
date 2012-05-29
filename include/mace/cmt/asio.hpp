@@ -8,7 +8,14 @@
 #include <boost/thread.hpp>
 #include <mace/cmt/future.hpp>
 
-namespace mace { namespace cmt { namespace asio {
+namespace mace { namespace cmt { 
+/**
+ *  @brief defines mace::cmt wrappers for boost::asio functions.
+ */
+namespace asio {
+    /**
+     *  @brief internal implementation types/methods for mace::cmt::asio
+     */
     namespace detail {
         using namespace mace::cmt;
 

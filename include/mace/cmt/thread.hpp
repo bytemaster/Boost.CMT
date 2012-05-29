@@ -8,7 +8,11 @@
 #include <mace/cmt/retainable.hpp>
 #include <boost/chrono.hpp>
 
-namespace mace { namespace cmt {
+namespace mace { 
+/**
+ *  @brief All types that are part of the MACE Cooperative Multi-Tasking Library
+ */
+namespace cmt {
    using boost::chrono::microseconds;
    using boost::chrono::system_clock;
 
@@ -34,7 +38,13 @@ namespace mace { namespace cmt {
 
             void async( const boost::function<void()>& t, priority p = priority() );
 
+            /**
+             *  @brief returns the name given by @ref set_name() for this thread
+             */
             const char* name()const;
+            /**
+             *  @brief associates a name with this thread.
+             */
             void        set_name( const char* n );
 
             static thread* create( const char* name = ""  );
@@ -51,7 +61,9 @@ namespace mace { namespace cmt {
              *  block that thread forever because the thread will not get a chance to process
              *  the call before blocking the thread.
              *
-             *  @param when - determines when this call will happen, as soon as possible after @parm when
+             *  @param f the method to be called
+             *  @param prio the priority of this method relative to others
+             *  @param when - determines when this call will happen, as soon as possible after <code>when</code>
              */
             template<typename T>
             future<T> schedule( const boost::function<T()>& f, const system_clock::time_point& when, priority prio = priority(), const char* n= "" ) {
@@ -75,9 +87,9 @@ namespace mace { namespace cmt {
              *  called from a thread running exec() then it will block 'cooperatively' and allow
              *  other tasks to run in that thread until this thread has returned a result.
              *
-             *  @note Calling mace::cmt::async(...).wait() in a thread before calling exec will
-             *  block that thread forever because the thread will not get a chance to process
-             *  the call before blocking the thread.
+             *  @param f
+             *  @param prio
+             *  @param n a human readable string to associate with this task.
              */
             template<typename T>
             future<T> async( const boost::function<T()>& f, priority prio = priority(), const char* n= "" ) {
@@ -86,32 +98,8 @@ namespace mace { namespace cmt {
                    async(tsk);
                    return p;
             }
-            template<typename T>
-            T sync( const boost::function<T()>& t, priority prio, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-                   stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
-                   typename promise<T>::ptr p((promise<T>*)&prom);
-                   stack_retainable<rtask<T> > tsk(t,p,(std::max)(current_priority(),prio),n); tsk.retain();
-                   async(&tsk);
-                   return p->wait(timeout_us);
-            }
-            template<typename T>
-            T sync( const boost::function<T()>& t, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-                   stack_retainable<promise<T> > prom; prom.retain(); prom.retain();
-                   typename promise<T>::ptr p((promise<T>*)&prom);
-                   stack_retainable<rtask<T> > tsk(t,p,current_priority(),n); tsk.retain();
-                   async(&tsk);
-                   return p->wait(timeout_us);
-            }
-            void sync( const boost::function<void()>& t, const microseconds& timeout_us=microseconds::max(), const char* n= "" ) {
-                   stack_retainable<promise<void> > prom; prom.retain(); prom.retain();
-                   typename promise<void>::ptr p((promise<void>*)&prom);
-                   stack_retainable<rtask<void> > tsk(t,p,current_priority(),n); tsk.retain();
-                   async(&tsk);
-                   p->wait(timeout_us);
-            }
 
-
-            void quit( );
+            void quit();
             void exec();
 
             bool is_running()const;

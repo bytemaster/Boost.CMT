@@ -1,3 +1,8 @@
+/** 
+ * @file mace/cmt/asio/udp/socket.hpp
+ * @brief defines cooperative / synchronous receive_from() and send_to() for boost::asio::ip::udp::socket
+ *
+ */
 #ifndef _MACE_CMT_ASIO_UDP_SOCKET_HPP_
 #define _MACE_CMT_ASIO_UDP_SOCKET_HPP_
 #include <boost/asio.hpp>

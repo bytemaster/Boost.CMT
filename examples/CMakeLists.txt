@@ -4,6 +4,8 @@ SET( libraries
     #/usr/local/lib/tcmalloc/libtcmalloc.a
     boost_cmt
     boost_context 
+    pthread
+    ${rt_library}
     ${Boost_THREAD_LIBRARY} 
     ${Boost_CHRONO_LIBRARY} 
     ${Boost_ASIO_LIBRARY} 

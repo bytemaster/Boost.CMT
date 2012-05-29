@@ -22,7 +22,7 @@ SET( libraries
     ${Boost_SYSTEM_LIBRARY} 
     ${Boost_CHRONO_LIBRARY} 
     ${Boost_SIGNALS_LIBRARY})
-SETUP_LIBRARY( boost_cmt SOURCES ${sources}
+SETUP_LIBRARY( mace_cmt SOURCES ${sources}
                              LIBRARIES  ${libraries}
                              LIBRARY_TYPE STATIC )
 

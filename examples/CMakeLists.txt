@@ -2,7 +2,7 @@
 
 SET( libraries 
     #/usr/local/lib/tcmalloc/libtcmalloc.a
-    boost_cmt
+    mace_cmt
     boost_context 
     pthread
     ${rt_library}

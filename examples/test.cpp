@@ -35,8 +35,7 @@ int hello(int cnt) {
     slog( "%1%", cnt );    
     mace::cmt::async<int>( boost::bind(hello2,cnt+10) );
     mace::cmt::async<int>( boost::bind(hello2,cnt+1000) );
-    mace::cmt::async<int>( boost::bind(hello2,cnt+10000) ).wait();
-    return mace::cmt::sync<int>( boost::bind(hello2,cnt+100) );
+    return mace::cmt::async<int>( boost::bind(hello2,cnt+10000) ).wait();
 }
 
 void main2() {
@@ -90,8 +89,8 @@ void bench() {
     start = boost::posix_time::microsec_clock::universal_time();
     for( uint32_t i = 0; i < cnt; ++i ) {
         try {
-           // async<int>( boost::bind(hello, "world"), "hello_func" ).wait(1000000);
-            sync<int>( boost::bind(hello, i), "hello_func" );//2000000);
+            async<int>( boost::bind(hello, int(5)) ).wait( boost::chrono::microseconds(1000000) );
+           // sync<int>( boost::bind(hello, i), "hello_func" );//2000000);
         } catch( const boost::exception& e ) {
                 elog( "%1%", boost::diagnostic_information(e) );
         }
